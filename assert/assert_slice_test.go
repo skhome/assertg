@@ -376,29 +376,24 @@ func TestSliceDoesNotContain(t *testing.T) {
 		expectedFail bool
 	}{
 		{
-			slice:        []*bit{{name: "bar"}},
-			element:      &bit{name: "foo"},
-			expectedFail: false,
+			slice:   []*bit{{name: "bar"}},
+			element: &bit{name: "foo"},
 		},
 		{
-			slice:        []*bit{{name: "foo"}, {name: "bar"}},
-			element:      &bit{name: "baz"},
-			expectedFail: false,
+			slice:   []*bit{{name: "foo"}, {name: "bar"}},
+			element: &bit{name: "baz"},
 		},
 		{
-			slice:        []*bit{},
-			element:      &bit{name: "foo"},
-			expectedFail: false,
+			slice:   []*bit{},
+			element: &bit{name: "foo"},
 		},
 		{
-			slice:        nil,
-			element:      nil,
-			expectedFail: false,
+			slice:   nil,
+			element: nil,
 		},
 		{
-			slice:        []*bit{},
-			element:      nil,
-			expectedFail: false,
+			slice:   []*bit{},
+			element: nil,
 		},
 		{
 			slice:        []*bit{{name: "foo"}},
@@ -425,6 +420,137 @@ func TestSliceDoesNotContain(t *testing.T) {
 			assertNoError(t, fixture)
 		} else {
 			assertErrorMessage(t, fixture, fmt.Sprintf(messageFormat, test.element, test.slice))
+		}
+	}
+}
+
+func TestSliceContainsAnyOf(t *testing.T) {
+	tests := []struct {
+		slice        []string
+		elements     []string
+		expectedFail bool
+	}{
+		{slice: []string{"foo", "bar"}, elements: []string{"foo"}},
+		{slice: []string{"foo", "bar"}, elements: []string{"foo", "baz"}},
+		{slice: []string{"foo", "bar", "baz"}, elements: []string{"foo", "baz"}},
+		{slice: []string{"foo", "bar"}, elements: []string{"baz"}, expectedFail: true},
+		{slice: []string{}, elements: []string{"foo"}, expectedFail: true},
+		{slice: []string(nil), elements: []string{"foo"}, expectedFail: true},
+		{slice: []string(nil), elements: []string(nil), expectedFail: true},
+	}
+	messageFormat := "expected slice to contain any of %#v, but got %#v"
+
+	for _, test := range tests {
+		// given
+		fixture := new(fixtureT)
+
+		// when
+		ThatSlice(fixture, test.slice).ContainsAnyOf(test.elements...)
+
+		// then
+		if !test.expectedFail {
+			assertNoError(t, fixture)
+		} else {
+			assertErrorMessage(t, fixture, fmt.Sprintf(messageFormat, test.elements, test.slice))
+		}
+	}
+}
+
+func TestSliceContainsAllOf(t *testing.T) {
+	tests := []struct {
+		slice        []string
+		elements     []string
+		expectedFail bool
+	}{
+		{slice: []string{"foo", "bar"}, elements: []string{"foo"}},
+		{slice: []string{"foo", "bar"}, elements: []string{"foo", "bar"}},
+		{slice: []string{"foo", "bar", "baz"}, elements: []string{"foo", "baz"}},
+		{slice: []string{"foo", "bar"}, elements: []string{"baz"}, expectedFail: true},
+		{slice: []string{"foo", "bar"}, elements: []string{"foo", "baz"}, expectedFail: true},
+		{slice: []string{}, elements: []string{"foo"}, expectedFail: true},
+		{slice: []string(nil), elements: []string{"foo"}, expectedFail: true},
+		{slice: []string(nil), elements: []string(nil), expectedFail: true},
+	}
+	messageFormat := "expected slice to contain any of %#v, but got %#v"
+
+	for _, test := range tests {
+		// given
+		fixture := new(fixtureT)
+
+		// when
+		ThatSlice(fixture, test.slice).ContainsAllOf(test.elements...)
+
+		// then
+		if !test.expectedFail {
+			assertNoError(t, fixture)
+		} else {
+			assertErrorMessage(t, fixture, fmt.Sprintf(messageFormat, test.elements, test.slice))
+		}
+	}
+}
+
+func TestSliceContainsNoneOf(t *testing.T) {
+	tests := []struct {
+		slice        []string
+		elements     []string
+		expectedFail bool
+	}{
+		{slice: []string{"foo"}, elements: []string{"baz"}},
+		{slice: []string{"foo", "bar"}, elements: []string{"baz"}},
+		{slice: []string{"foo"}, elements: []string{"bar", "baz"}},
+		{slice: []string(nil), elements: []string(nil)},
+		{slice: []string{}, elements: []string{"foo"}},
+		{slice: []string(nil), elements: []string{"foo"}},
+		{slice: []string{"foo", "bar"}, elements: []string{"foo", "baz"}, expectedFail: true},
+		{slice: []string{"foo", "bar"}, elements: []string{"foo"}, expectedFail: true},
+	}
+	messageFormat := "expected slice to contain none of %#v, but got %#v"
+
+	for _, test := range tests {
+		// given
+		fixture := new(fixtureT)
+
+		// when
+		ThatSlice(fixture, test.slice).ContainsNoneOf(test.elements...)
+
+		// then
+		if !test.expectedFail {
+			assertNoError(t, fixture)
+		} else {
+			assertErrorMessage(t, fixture, fmt.Sprintf(messageFormat, test.elements, test.slice))
+		}
+	}
+}
+
+func TestSliceContainsExactly(t *testing.T) {
+	tests := []struct {
+		slice        []string
+		elements     []string
+		expectedFail bool
+	}{
+		{slice: []string{"foo"}, elements: []string{"foo"}},
+		{slice: []string{"foo", "bar"}, elements: []string{"foo", "bar"}},
+		{slice: []string{"foo", "bar"}, elements: []string{"bar", "foo"}},
+		{slice: []string{}, elements: []string{}},
+		{slice: []string(nil), elements: []string(nil)},
+		{slice: []string{"foo", "bar"}, elements: []string{"foo"}, expectedFail: true},
+		{slice: []string{"foo", "bar"}, elements: []string{}, expectedFail: true},
+		{slice: []string{"foo", "bar"}, elements: []string{"foo", "bar", "baz"}, expectedFail: true},
+	}
+	messageFormat := "expected slice to contain exactly %#v, but got %#v"
+
+	for _, test := range tests {
+		// given
+		fixture := new(fixtureT)
+
+		// when
+		ThatSlice(fixture, test.slice).ContainsExactly(test.elements...)
+
+		// then
+		if !test.expectedFail {
+			assertNoError(t, fixture)
+		} else {
+			assertErrorMessage(t, fixture, fmt.Sprintf(messageFormat, test.elements, test.slice))
 		}
 	}
 }
@@ -602,6 +728,37 @@ func TestSliceHasExactlyMatch(t *testing.T) {
 			assertNoError(t, fixture)
 		} else {
 			assertErrorMessage(t, fixture, fmt.Sprintf(messageFormat, test.num, test.slice))
+		}
+	}
+}
+
+func TestSliceHasNoneMatch(t *testing.T) {
+	tests := []struct {
+		slice        []string
+		expectedFail bool
+	}{
+		{slice: []string{"bar"}},
+		{slice: nil},
+		{slice: []string(nil)},
+		{slice: []string{}},
+		{slice: []string{"foo"}, expectedFail: true},
+		{slice: []string{"foo", "foo"}, expectedFail: true},
+	}
+	predicate := func(element string) bool { return element == "foo" }
+	messageFormat := "expected slice to have no entry match the predicate, but got %#v"
+
+	for _, test := range tests {
+		// given
+		fixture := new(fixtureT)
+
+		// when
+		ThatSlice(fixture, test.slice).HasNoneMatch(predicate)
+
+		// then
+		if !test.expectedFail {
+			assertNoError(t, fixture)
+		} else {
+			assertErrorMessage(t, fixture, fmt.Sprintf(messageFormat, test.slice))
 		}
 	}
 }

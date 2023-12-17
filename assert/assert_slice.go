@@ -116,17 +116,22 @@ func (a *SliceAssert[T, E]) IsNotEmpty() *SliceAssert[T, E] {
 	return a
 }
 
+func containsEntry[T ~[]E, E any](slice T, entry E) bool {
+	found := false
+	for i := range slice {
+		if ObjectsAreEqual(slice[i], entry) {
+			found = true
+		}
+	}
+	return found
+}
+
 // Contains checks that the actual slice contains the given element.
 func (a *SliceAssert[T, E]) Contains(element E) *SliceAssert[T, E] {
 	if h, ok := a.t.(tHelper); ok {
 		h.Helper()
 	}
-	found := false
-	for i := range a.actual {
-		if ObjectsAreEqual(a.actual[i], element) {
-			found = true
-		}
-	}
+	found := containsEntry(a.actual, element)
 	if !found {
 		if !a.hasFailMessage() {
 			a.WithFailMessage("expected slice to contain %#v, but got %#v", element, a.actual)
@@ -141,15 +146,90 @@ func (a *SliceAssert[T, E]) DoesNotContain(element E) *SliceAssert[T, E] {
 	if h, ok := a.t.(tHelper); ok {
 		h.Helper()
 	}
-	found := false
-	for i := range a.actual {
-		if ObjectsAreEqual(a.actual[i], element) {
-			found = true
-		}
-	}
+	found := containsEntry(a.actual, element)
 	if found {
 		if !a.hasFailMessage() {
 			a.WithFailMessage("expected slice to not contain %#v, but got %#v", element, a.actual)
+		}
+		Fail(a.t, a.message, a.description)
+	}
+	return a
+}
+
+// ContainsAnyOf checks that the actual slice contains at least one of the elements.
+func (a *SliceAssert[T, E]) ContainsAnyOf(elements ...E) *SliceAssert[T, E] {
+	if h, ok := a.t.(tHelper); ok {
+		h.Helper()
+	}
+	found := false
+	for i := range elements {
+		if containsEntry(a.actual, elements[i]) {
+			found = true
+		}
+	}
+	if !found {
+		if !a.hasFailMessage() {
+			a.WithFailMessage("expected slice to contain any of %#v, but got %#v", elements, a.actual)
+		}
+		Fail(a.t, a.message, a.description)
+	}
+	return a
+}
+
+// ContainsAllOf checks that the actual slice contains all of the elements.
+func (a *SliceAssert[T, E]) ContainsAllOf(elements ...E) *SliceAssert[T, E] {
+	if h, ok := a.t.(tHelper); ok {
+		h.Helper()
+	}
+	found := 0
+	for i := range elements {
+		if containsEntry(a.actual, elements[i]) {
+			found++
+		}
+	}
+	if found != len(elements) || len(a.actual) == 0 || len(elements) == 0 {
+		if !a.hasFailMessage() {
+			a.WithFailMessage("expected slice to contain any of %#v, but got %#v", elements, a.actual)
+		}
+		Fail(a.t, a.message, a.description)
+	}
+	return a
+}
+
+// ContainsNoneOf checks that the actual slice contains none of the elements.
+func (a *SliceAssert[T, E]) ContainsNoneOf(elements ...E) *SliceAssert[T, E] {
+	if h, ok := a.t.(tHelper); ok {
+		h.Helper()
+	}
+	found := 0
+	for i := range elements {
+		if containsEntry(a.actual, elements[i]) {
+			found++
+		}
+	}
+	if found != 0 {
+		if !a.hasFailMessage() {
+			a.WithFailMessage("expected slice to contain none of %#v, but got %#v", elements, a.actual)
+		}
+		Fail(a.t, a.message, a.description)
+	}
+	return a
+}
+
+// ContainsExactly checks that the actual slice contains exactly the elements.
+func (a *SliceAssert[T, E]) ContainsExactly(elements ...E) *SliceAssert[T, E] {
+	if h, ok := a.t.(tHelper); ok {
+		h.Helper()
+	}
+	found := 0
+	for i := range elements {
+		if containsEntry(a.actual, elements[i]) {
+			found++
+		}
+	}
+	if found != len(elements) || len(a.actual) != len(elements) {
+		if !a.hasFailMessage() {
+			a.WithFailMessage("expected slice to contain exactly %#v, but got %#v", elements, a.actual)
 		}
 		Fail(a.t, a.message, a.description)
 	}
@@ -220,6 +300,18 @@ func (a *SliceAssert[T, E]) HasAnyMatch(predicate Predicate[E]) *SliceAssert[T, 
 		a.WithFailMessage("expected slice to have any entry match the predicate, but got %#v", a.actual)
 	}
 	a.HasAtLeastMatch(1, predicate)
+	return a
+}
+
+// HasNoneMatch checks whether no element of the actual slice match the given predicate.
+func (a *SliceAssert[T, E]) HasNoneMatch(predicate Predicate[E]) *SliceAssert[T, E] {
+	if h, ok := a.t.(tHelper); ok {
+		h.Helper()
+	}
+	if !a.hasFailMessage() {
+		a.WithFailMessage("expected slice to have no entry match the predicate, but got %#v", a.actual)
+	}
+	a.HasExactlyMatch(0, predicate)
 	return a
 }
 
