@@ -23,14 +23,19 @@ func (a *SliceAssert[T, E]) WithFailMessage(format string, args ...any) *SliceAs
 	return a
 }
 
+// hasFailMessage returns if a failure message has been set already.
+func (a *SliceAssert[T, E]) hasFailMessage() bool {
+	return len(a.message) > 0
+}
+
 // IsNil checks that the actual slice is nil
 func (a *SliceAssert[T, E]) IsNil() *SliceAssert[T, E] {
 	if h, ok := a.t.(tHelper); ok {
 		h.Helper()
 	}
 	if a.actual != nil {
-		if len(a.message) == 0 {
-			a.message = fmt.Sprintf("expected slice to be nil, but got %#v", a.actual)
+		if !a.hasFailMessage() {
+			a.WithFailMessage("expected slice to be nil, but got %#v", a.actual)
 		}
 		Fail(a.t, a.message, a.description)
 	}
@@ -43,8 +48,8 @@ func (a *SliceAssert[T, E]) IsNotNil() *SliceAssert[T, E] {
 		h.Helper()
 	}
 	if a.actual == nil {
-		if len(a.message) == 0 {
-			a.message = fmt.Sprintf("expected slice to not be nil, but got %#v", a.actual)
+		if !a.hasFailMessage() {
+			a.WithFailMessage("expected slice to not be nil, but got %#v", a.actual)
 		}
 		Fail(a.t, a.message, a.description)
 	}
@@ -57,8 +62,8 @@ func (a *SliceAssert[T, E]) HasSize(size int) *SliceAssert[T, E] {
 		h.Helper()
 	}
 	if len(a.actual) != size {
-		if len(a.message) == 0 {
-			a.message = fmt.Sprintf("expected slice to have a size of %d, but got %#v", size, a.actual)
+		if !a.hasFailMessage() {
+			a.WithFailMessage("expected slice to have a size of %d, but got %#v", size, a.actual)
 		}
 		Fail(a.t, a.message, a.description)
 	}
@@ -71,8 +76,8 @@ func (a *SliceAssert[T, E]) HasSizeGreaterThan(threshold int) *SliceAssert[T, E]
 		h.Helper()
 	}
 	if len(a.actual) <= threshold {
-		if len(a.message) == 0 {
-			a.message = fmt.Sprintf("expected slice to have a size greater than %d, but got %#v", threshold, a.actual)
+		if !a.hasFailMessage() {
+			a.WithFailMessage("expected slice to have a size greater than %d, but got %#v", threshold, a.actual)
 		}
 		Fail(a.t, a.message, a.description)
 	}
@@ -85,8 +90,8 @@ func (a *SliceAssert[T, E]) HasSizeLessThan(threshold int) *SliceAssert[T, E] {
 		h.Helper()
 	}
 	if len(a.actual) >= threshold {
-		if len(a.message) == 0 {
-			a.message = fmt.Sprintf("expected slice to have a size less than %d, but got %#v", threshold, a.actual)
+		if !a.hasFailMessage() {
+			a.WithFailMessage("expected slice to have a size less than %d, but got %#v", threshold, a.actual)
 		}
 		Fail(a.t, a.message, a.description)
 	}
@@ -123,8 +128,8 @@ func (a *SliceAssert[T, E]) Contains(element E) *SliceAssert[T, E] {
 		}
 	}
 	if !found {
-		if len(a.message) == 0 {
-			a.message = fmt.Sprintf("expected slice to contain %#v, but got %#v", element, a.actual)
+		if !a.hasFailMessage() {
+			a.WithFailMessage("expected slice to contain %#v, but got %#v", element, a.actual)
 		}
 		Fail(a.t, a.message, a.description)
 	}
@@ -143,48 +148,8 @@ func (a *SliceAssert[T, E]) DoesNotContain(element E) *SliceAssert[T, E] {
 		}
 	}
 	if found {
-		if len(a.message) == 0 {
-			a.message = fmt.Sprintf("expected slice to not contain %#v, but got %#v", element, a.actual)
-		}
-		Fail(a.t, a.message, a.description)
-	}
-	return a
-}
-
-// HasAnyMatch checks whether any element of the actual slice matches the given predicate.
-func (a *SliceAssert[T, E]) HasAnyMatch(predicate Predicate[E]) *SliceAssert[T, E] {
-	if h, ok := a.t.(tHelper); ok {
-		h.Helper()
-	}
-	found := false
-	for i := range a.actual {
-		if predicate(a.actual[i]) {
-			found = true
-		}
-	}
-	if !found {
-		if len(a.message) == 0 {
-			a.message = fmt.Sprintf("expected slice to have any entry match the predicate, but got %#v", a.actual)
-		}
-		Fail(a.t, a.message, a.description)
-	}
-	return a
-}
-
-// HasAllMatch checks whether all elements of the actual slice match the given predicate.
-func (a *SliceAssert[T, E]) HasAllMatch(predicate Predicate[E]) *SliceAssert[T, E] {
-	if h, ok := a.t.(tHelper); ok {
-		h.Helper()
-	}
-	fail := false
-	for i := range a.actual {
-		if !predicate(a.actual[i]) {
-			fail = true
-		}
-	}
-	if fail {
-		if len(a.message) == 0 {
-			a.message = fmt.Sprintf("expected slice to have all entries match the predicate, but got %#v", a.actual)
+		if !a.hasFailMessage() {
+			a.WithFailMessage("expected slice to not contain %#v, but got %#v", element, a.actual)
 		}
 		Fail(a.t, a.message, a.description)
 	}
@@ -201,6 +166,21 @@ func numberOfPredicateMatches[T ~[]E, E any](slice T, predicate Predicate[E]) in
 	return matches
 }
 
+// HasExactlyMatch checks that there are exactly n elements in the actual slice that match the given predicate.
+func (a *SliceAssert[T, E]) HasExactlyMatch(n int, predicate Predicate[E]) *SliceAssert[T, E] {
+	if h, ok := a.t.(tHelper); ok {
+		h.Helper()
+	}
+	matches := numberOfPredicateMatches(a.actual, predicate)
+	if matches != n {
+		if !a.hasFailMessage() {
+			a.WithFailMessage("expected slice to have exactly %d entries match the predicate, but got %#v", n, a.actual)
+		}
+		Fail(a.t, a.message, a.description)
+	}
+	return a
+}
+
 // HasAtLeastMatch checks that there are at least n elements in the actual slice that match the given predicate.
 func (a *SliceAssert[T, E]) HasAtLeastMatch(n int, predicate Predicate[E]) *SliceAssert[T, E] {
 	if h, ok := a.t.(tHelper); ok {
@@ -208,8 +188,8 @@ func (a *SliceAssert[T, E]) HasAtLeastMatch(n int, predicate Predicate[E]) *Slic
 	}
 	matches := numberOfPredicateMatches(a.actual, predicate)
 	if matches < n {
-		if len(a.message) == 0 {
-			a.message = fmt.Sprintf("expected slice to have at least %d entries match the predicate, but got %#v", n, a.actual)
+		if !a.hasFailMessage() {
+			a.WithFailMessage("expected slice to have at least %d entries match the predicate, but got %#v", n, a.actual)
 		}
 		Fail(a.t, a.message, a.description)
 	}
@@ -223,26 +203,35 @@ func (a *SliceAssert[T, E]) HasAtMostMatch(n int, predicate Predicate[E]) *Slice
 	}
 	matches := numberOfPredicateMatches(a.actual, predicate)
 	if matches > n {
-		if len(a.message) == 0 {
-			a.message = fmt.Sprintf("expected slice to have at most %d entries match the predicate, but got %#v", n, a.actual)
+		if !a.hasFailMessage() {
+			a.WithFailMessage("expected slice to have at most %d entries match the predicate, but got %#v", n, a.actual)
 		}
 		Fail(a.t, a.message, a.description)
 	}
 	return a
 }
 
-// HasExactlyMatch checks that there are exactly n elements in the actual slice that match the given predicate.
-func (a *SliceAssert[T, E]) HasExactlyMatch(n int, predicate Predicate[E]) *SliceAssert[T, E] {
+// HasAnyMatch checks whether any element of the actual slice matches the given predicate.
+func (a *SliceAssert[T, E]) HasAnyMatch(predicate Predicate[E]) *SliceAssert[T, E] {
 	if h, ok := a.t.(tHelper); ok {
 		h.Helper()
 	}
-	matches := numberOfPredicateMatches(a.actual, predicate)
-	if matches != n {
-		if len(a.message) == 0 {
-			a.message = fmt.Sprintf("expected slice to have exactly %d entries match the predicate, but got %#v", n, a.actual)
-		}
-		Fail(a.t, a.message, a.description)
+	if !a.hasFailMessage() {
+		a.WithFailMessage("expected slice to have any entry match the predicate, but got %#v", a.actual)
 	}
+	a.HasAtLeastMatch(1, predicate)
+	return a
+}
+
+// HasAllMatch checks whether all elements of the actual slice match the given predicate.
+func (a *SliceAssert[T, E]) HasAllMatch(predicate Predicate[E]) *SliceAssert[T, E] {
+	if h, ok := a.t.(tHelper); ok {
+		h.Helper()
+	}
+	if !a.hasFailMessage() {
+		a.WithFailMessage("expected slice to have all entries match the predicate, but got %#v", a.actual)
+	}
+	a.HasExactlyMatch(len(a.actual), predicate)
 	return a
 }
 
