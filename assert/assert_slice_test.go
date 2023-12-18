@@ -522,7 +522,7 @@ func TestSliceContainsNoneOf(t *testing.T) {
 	}
 }
 
-func TestSliceContainsExactly(t *testing.T) {
+func TestSliceContainsOnly(t *testing.T) {
 	tests := []struct {
 		slice        []string
 		elements     []string
@@ -537,6 +537,39 @@ func TestSliceContainsExactly(t *testing.T) {
 		{slice: []string{"foo", "bar"}, elements: []string{}, expectedFail: true},
 		{slice: []string{"foo", "bar"}, elements: []string{"foo", "bar", "baz"}, expectedFail: true},
 	}
+	messageFormat := "expected slice to contain only %#v, but got %#v"
+
+	for _, test := range tests {
+		// given
+		fixture := new(fixtureT)
+
+		// when
+		ThatSlice(fixture, test.slice).ContainsOnly(test.elements...)
+
+		// then
+		if !test.expectedFail {
+			assertNoError(t, fixture)
+		} else {
+			assertErrorMessage(t, fixture, fmt.Sprintf(messageFormat, test.elements, test.slice))
+		}
+	}
+}
+
+func TestSliceContainsExactly(t *testing.T) {
+	tests := []struct {
+		slice        []string
+		elements     []string
+		expectedFail bool
+	}{
+		{slice: []string{"foo"}, elements: []string{"foo"}},
+		{slice: []string{"foo", "bar"}, elements: []string{"foo", "bar"}},
+		{slice: []string{}, elements: []string{}},
+		{slice: []string(nil), elements: []string(nil)},
+		{slice: []string{"foo", "bar"}, elements: []string{"bar", "foo"}, expectedFail: true},
+		{slice: []string{"foo", "bar"}, elements: []string{"foo"}, expectedFail: true},
+		{slice: []string{"foo", "bar"}, elements: []string{}, expectedFail: true},
+		{slice: []string{}, elements: []string{"foo"}, expectedFail: true},
+	}
 	messageFormat := "expected slice to contain exactly %#v, but got %#v"
 
 	for _, test := range tests {
@@ -545,6 +578,39 @@ func TestSliceContainsExactly(t *testing.T) {
 
 		// when
 		ThatSlice(fixture, test.slice).ContainsExactly(test.elements...)
+
+		// then
+		if !test.expectedFail {
+			assertNoError(t, fixture)
+		} else {
+			assertErrorMessage(t, fixture, fmt.Sprintf(messageFormat, test.elements, test.slice))
+		}
+	}
+}
+
+func TestSliceContainsOnlyOnce(t *testing.T) {
+	tests := []struct {
+		slice        []string
+		elements     []string
+		expectedFail bool
+	}{
+		{slice: []string{"foo"}, elements: []string{"foo"}},
+		{slice: []string{"foo", "bar"}, elements: []string{"foo", "bar"}},
+		{slice: []string{"foo", "bar"}, elements: []string{"bar", "foo"}},
+		{slice: []string{}, elements: []string{}},
+		{slice: []string(nil), elements: []string(nil)},
+		{slice: []string{"foo", "foo"}, elements: []string{"foo"}, expectedFail: true},
+		{slice: []string{}, elements: []string{"foo"}, expectedFail: true},
+		{slice: []string{"foo", "bar"}, elements: []string{"foo", "baz"}, expectedFail: true},
+	}
+	messageFormat := "expected slice to contain %#v only once, but got %#v"
+
+	for _, test := range tests {
+		// given
+		fixture := new(fixtureT)
+
+		// when
+		ThatSlice(fixture, test.slice).ContainsOnlyOnce(test.elements...)
 
 		// then
 		if !test.expectedFail {

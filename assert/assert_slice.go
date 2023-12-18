@@ -216,8 +216,8 @@ func (a *SliceAssert[T, E]) ContainsNoneOf(elements ...E) *SliceAssert[T, E] {
 	return a
 }
 
-// ContainsExactly checks that the actual slice contains exactly the elements.
-func (a *SliceAssert[T, E]) ContainsExactly(elements ...E) *SliceAssert[T, E] {
+// ContainsOnly checks that the actual slice contains only the given elements and nothing else, in any order and ignoring duplicates.
+func (a *SliceAssert[T, E]) ContainsOnly(elements ...E) *SliceAssert[T, E] {
 	if h, ok := a.t.(tHelper); ok {
 		h.Helper()
 	}
@@ -229,7 +229,57 @@ func (a *SliceAssert[T, E]) ContainsExactly(elements ...E) *SliceAssert[T, E] {
 	}
 	if found != len(elements) || len(a.actual) != len(elements) {
 		if !a.hasFailMessage() {
+			a.WithFailMessage("expected slice to contain only %#v, but got %#v", elements, a.actual)
+		}
+		Fail(a.t, a.message, a.description)
+	}
+	return a
+}
+
+// ContainsOnly checks that the actual slice contains exactly the given elements and nothing else, in order.
+func (a *SliceAssert[T, E]) ContainsExactly(elements ...E) *SliceAssert[T, E] {
+	if h, ok := a.t.(tHelper); ok {
+		h.Helper()
+	}
+	foundMismatch := false
+	if len(a.actual) == len(elements) {
+		for i := 0; i < len(elements) && !foundMismatch; i++ {
+			if !ObjectsAreEqual(elements[i], a.actual[i]) {
+				foundMismatch = true
+			}
+		}
+	} else {
+		foundMismatch = true
+	}
+	if foundMismatch {
+		if !a.hasFailMessage() {
 			a.WithFailMessage("expected slice to contain exactly %#v, but got %#v", elements, a.actual)
+		}
+		Fail(a.t, a.message, a.description)
+	}
+	return a
+}
+
+// ContainsOnlyOnce checks that the actual slice contains the given elements only once.
+func (a *SliceAssert[T, E]) ContainsOnlyOnce(elements ...E) *SliceAssert[T, E] {
+	if h, ok := a.t.(tHelper); ok {
+		h.Helper()
+	}
+	foundMismatch := false
+	for i := range elements {
+		matches := 0
+		for j := range a.actual {
+			if ObjectsAreEqual(elements[i], a.actual[j]) {
+				matches++
+			}
+		}
+		if matches != 1 {
+			foundMismatch = true
+		}
+	}
+	if foundMismatch {
+		if !a.hasFailMessage() {
+			a.WithFailMessage("expected slice to contain %#v only once, but got %#v", elements, a.actual)
 		}
 		Fail(a.t, a.message, a.description)
 	}
