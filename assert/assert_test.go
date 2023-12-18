@@ -21,13 +21,6 @@ func assertErrorMessage(t *testing.T, fixture *fixtureT, message string) {
 	}
 }
 
-func assertErrorDescription(t *testing.T, fixture *fixtureT, description string) {
-	t.Helper()
-	if len(description) > 0 && !strings.Contains(fixture.message, fmt.Sprintf("Description: %s", description)) {
-		t.Errorf("expected to fail with error description %q, but got %#v", description, fixture.message)
-	}
-}
-
 func assertNoError(t *testing.T, fixture *fixtureT) {
 	t.Helper()
 	if len(fixture.message) > 0 {
