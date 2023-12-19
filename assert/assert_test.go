@@ -14,6 +14,8 @@ func (f *fixtureT) Errorf(format string, args ...any) {
 	f.message = fmt.Sprintf(format, args...)
 }
 
+func (f *fixtureT) Helper() {}
+
 func assertErrorMessage(t *testing.T, fixture *fixtureT, message string) {
 	t.Helper()
 	if !strings.Contains(fixture.message, fmt.Sprintf("Error: %s", message)) {

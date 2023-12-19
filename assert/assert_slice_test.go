@@ -9,20 +9,10 @@ func TestSliceIsNil(t *testing.T) {
 	tests := []struct {
 		slice        []string
 		expectedFail bool
-		message      string
 	}{
-		{
-			slice:        nil,
-			expectedFail: false,
-		},
-		{
-			slice:        []string(nil),
-			expectedFail: false,
-		},
-		{
-			slice:        []string{"foo"},
-			expectedFail: true,
-		},
+		{slice: nil},
+		{slice: []string(nil)},
+		{slice: []string{"foo"}, expectedFail: true},
 	}
 	messageFormat := "expected slice to be nil, but got %#v"
 
@@ -46,16 +36,9 @@ func TestSliceIsNotNil(t *testing.T) {
 	tests := []struct {
 		slice        []string
 		expectedFail bool
-		message      string
 	}{
-		{
-			slice:        []string{"foo"},
-			expectedFail: false,
-		},
-		{
-			slice:        nil,
-			expectedFail: true,
-		},
+		{slice: []string{"foo"}},
+		{slice: nil, expectedFail: true},
 	}
 	messageFormat := "expected slice to not be nil, but got %#v"
 

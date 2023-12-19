@@ -5,8 +5,11 @@ type TestingT interface {
 	Errorf(format string, args ...any)
 }
 
-// Predicate is a function to assert whether a value meets a condition.
+// Predicate is a function that returns if a value meets a condition.
 type Predicate[T any] func(value T) bool
+
+// Condition is a function to assert a condition.
+type Condition[T any] func(value T)
 
 // ThatString starts assertions on a string.
 func ThatString(t TestingT, actual string) *StringAssert {
