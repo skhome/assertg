@@ -1,6 +1,6 @@
 # AssertG - Fluent Assertions for Go
 
-[![CI](https://github.com/skhome/assertg/actions/workflows/main.yml/badge.svg?branch=main)](https://github.com/skhome/assertg/actions/workflows/main.yml?query=branch%3Amain)
+[![CI](https://github.com/skhome/assertg/actions/workflows/main.yaml/badge.svg)](https://github.com/skhome/assertg/actions/workflows/main.yaml)
 
 Go package to provide an intuitive set of strongly typed assertions for use in unit testing.
 
