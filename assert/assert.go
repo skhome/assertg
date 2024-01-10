@@ -20,9 +20,9 @@ func ThatString(t TestingT, actual string) *StringAssert {
 }
 
 // ThatSlice starts assertions on a slice.
-func ThatSlice[T ~[]E, E any](t TestingT, actual T) *SliceAssert[T, E] {
+func ThatSlice[E any](t TestingT, actual []E) *SliceAssert[E] {
 	if h, ok := t.(tHelper); ok {
 		h.Helper()
 	}
-	return &SliceAssert[T, E]{t: t, actual: actual}
+	return &SliceAssert[E]{t: t, actual: actual}
 }

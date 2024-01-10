@@ -1,4 +1,4 @@
-package assert
+package assert_test
 
 import (
 	"fmt"
@@ -15,6 +15,25 @@ func (f *fixtureT) Errorf(format string, args ...any) {
 }
 
 func (f *fixtureT) Helper() {}
+
+// function that runs a single test
+type testExecutor[E any] func(fixture *fixtureT, test E) (bool, string)
+
+// run a list of tests and verify error messages
+func runTests[E any](t *testing.T, tests []E) func(execTest testExecutor[E]) {
+	t.Helper()
+	return func(execTest testExecutor[E]) {
+		t.Helper()
+		for _, test := range tests {
+			fixture := new(fixtureT)
+			if ok, message := execTest(fixture, test); ok {
+				assertNoError(t, fixture)
+			} else {
+				assertErrorMessage(t, fixture, message)
+			}
+		}
+	}
+}
 
 func assertErrorMessage(t *testing.T, fixture *fixtureT, message string) {
 	t.Helper()

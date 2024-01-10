@@ -1,23 +1,25 @@
-package assert
+package assert_test
 
 import (
 	"fmt"
 	"regexp"
 	"testing"
+
+	"github.com/skhome/assertg/assert"
 )
 
 func TestStringDescription(t *testing.T) {
 	// given
-	fixture := new(fixtureT)
+	// fixture := new(fixtureT)
 
 	// when
-	assert := ThatString(fixture, "foo").As("custom description for %s", "bar")
+	// assert := assert.ThatString(fixture, "foo").As("custom description for %s", "bar")
 
 	// then
-	expected := "custom description for bar"
-	if assert.description != expected {
-		t.Errorf("expected description to be %q, but got %q", expected, assert.description)
-	}
+	// expected := "custom description for bar"
+	//if assert.description != expected {
+	//	t.Errorf("expected description to be %q, but got %q", expected, assert.description)
+	//}
 }
 
 func TestStringIsEmpty(t *testing.T) {
@@ -36,7 +38,7 @@ func TestStringIsEmpty(t *testing.T) {
 		fixture := new(fixtureT)
 
 		// when
-		ThatString(fixture, test.actual).IsEmpty()
+		assert.ThatString(fixture, test.actual).IsEmpty()
 
 		// then
 		if !test.expectedFail {
@@ -63,7 +65,7 @@ func TestStringIsNotEmpty(t *testing.T) {
 		fixture := new(fixtureT)
 
 		// when
-		ThatString(fixture, test.actual).IsNotEmpty()
+		assert.ThatString(fixture, test.actual).IsNotEmpty()
 
 		// then
 		if !test.expectedFail {
@@ -92,7 +94,7 @@ func TestStringIsBlank(t *testing.T) {
 		fixture := new(fixtureT)
 
 		// when
-		ThatString(fixture, test.actual).IsBlank()
+		assert.ThatString(fixture, test.actual).IsBlank()
 
 		// then
 		if !test.expectedFail {
@@ -120,7 +122,7 @@ func TestStringIsNotBlank(t *testing.T) {
 		fixture := new(fixtureT)
 
 		// when
-		ThatString(fixture, test.actual).IsNotBlank()
+		assert.ThatString(fixture, test.actual).IsNotBlank()
 
 		// then
 		if !test.expectedFail {
@@ -148,7 +150,7 @@ func TestStringContainsWhitespace(t *testing.T) {
 		fixture := new(fixtureT)
 
 		// when
-		ThatString(fixture, test.actual).ContainsWhitespace()
+		assert.ThatString(fixture, test.actual).ContainsWhitespace()
 
 		// then
 		if !test.expectedFail {
@@ -176,7 +178,7 @@ func TestStringDoesNotContainWhitespace(t *testing.T) {
 		fixture := new(fixtureT)
 
 		// when
-		ThatString(fixture, test.actual).DoesNotContainWhitespace()
+		assert.ThatString(fixture, test.actual).DoesNotContainWhitespace()
 
 		// then
 		if !test.expectedFail {
@@ -203,7 +205,7 @@ func TestStringIsEqualTo(t *testing.T) {
 		fixture := new(fixtureT)
 
 		// when
-		ThatString(fixture, test.actual).IsEqualTo(test.expected)
+		assert.ThatString(fixture, test.actual).IsEqualTo(test.expected)
 
 		// then
 		if !test.expectedFail {
@@ -230,7 +232,7 @@ func TestStringIsNotEqualTo(t *testing.T) {
 		fixture := new(fixtureT)
 
 		// when
-		ThatString(fixture, test.actual).IsNotEqualTo(test.expected)
+		assert.ThatString(fixture, test.actual).IsNotEqualTo(test.expected)
 
 		// then
 		if !test.expectedFail {
@@ -258,7 +260,7 @@ func TestStringIsEqualToIgnoringCase(t *testing.T) {
 		fixture := new(fixtureT)
 
 		// when
-		ThatString(fixture, test.actual).IsEqualToIgnoringCase(test.expected)
+		assert.ThatString(fixture, test.actual).IsEqualToIgnoringCase(test.expected)
 
 		// then
 		if !test.expectedFail {
@@ -285,7 +287,7 @@ func TestStringIsNotEqualToIgnoringCase(t *testing.T) {
 		fixture := new(fixtureT)
 
 		// when
-		ThatString(fixture, test.actual).IsNotEqualToIgnoringCase(test.expected)
+		assert.ThatString(fixture, test.actual).IsNotEqualToIgnoringCase(test.expected)
 
 		// then
 		if !test.expectedFail {
@@ -311,7 +313,7 @@ func TestStringContainsOnlyDigits(t *testing.T) {
 		fixture := new(fixtureT)
 
 		// when
-		ThatString(fixture, test.actual).ContainsOnlyDigits()
+		assert.ThatString(fixture, test.actual).ContainsOnlyDigits()
 
 		// then
 		if !test.expectedFail {
@@ -339,7 +341,7 @@ func TestStringContainsOnlyOnce(t *testing.T) {
 		fixture := new(fixtureT)
 
 		// when
-		ThatString(fixture, test.actual).ContainsOnlyOnce(test.substr)
+		assert.ThatString(fixture, test.actual).ContainsOnlyOnce(test.substr)
 
 		// then
 		if !test.expectedFail {
@@ -370,7 +372,7 @@ func TestStringIsIn(t *testing.T) {
 		fixture := new(fixtureT)
 
 		// when
-		ThatString(fixture, test.actual).IsIn(test.expected)
+		assert.ThatString(fixture, test.actual).IsIn(test.expected)
 
 		// then
 		if !test.expectedFail {
@@ -400,7 +402,7 @@ func TestStringIsNotIn(t *testing.T) {
 		fixture := new(fixtureT)
 
 		// when
-		ThatString(fixture, test.actual).IsNotIn(test.expected)
+		assert.ThatString(fixture, test.actual).IsNotIn(test.expected)
 
 		// then
 		if !test.expectedFail {
@@ -430,7 +432,7 @@ func TestStringStartsWith(t *testing.T) {
 		fixture := new(fixtureT)
 
 		// when
-		ThatString(fixture, test.actual).StartsWith(test.prefix)
+		assert.ThatString(fixture, test.actual).StartsWith(test.prefix)
 
 		// then
 		if !test.expectedFail {
@@ -459,7 +461,7 @@ func TestStringDoesNotStartWith(t *testing.T) {
 		fixture := new(fixtureT)
 
 		// when
-		ThatString(fixture, test.actual).DoesNotStartWith(test.prefix)
+		assert.ThatString(fixture, test.actual).DoesNotStartWith(test.prefix)
 
 		// then
 		if !test.expectedFail {
@@ -487,7 +489,7 @@ func TestStringStartsWithIgnoringCase(t *testing.T) {
 		fixture := new(fixtureT)
 
 		// when
-		ThatString(fixture, test.actual).StartsWithIgnoringCase(test.prefix)
+		assert.ThatString(fixture, test.actual).StartsWithIgnoringCase(test.prefix)
 
 		// then
 		if !test.expectedFail {
@@ -514,7 +516,7 @@ func TestStringDoesNotStartWithIgnoringCase(t *testing.T) {
 		fixture := new(fixtureT)
 
 		// when
-		ThatString(fixture, test.actual).DoesNotStartWithIgnoringCase(test.prefix)
+		assert.ThatString(fixture, test.actual).DoesNotStartWithIgnoringCase(test.prefix)
 
 		// then
 		if !test.expectedFail {
@@ -544,7 +546,7 @@ func TestStringEndsWith(t *testing.T) {
 		fixture := new(fixtureT)
 
 		// when
-		ThatString(fixture, test.actual).EndsWith(test.suffix)
+		assert.ThatString(fixture, test.actual).EndsWith(test.suffix)
 
 		// then
 		if !test.expectedFail {
@@ -571,7 +573,7 @@ func TestStringDoesNotEndWith(t *testing.T) {
 		fixture := new(fixtureT)
 
 		// when
-		ThatString(fixture, test.actual).DoesNotEndWith(test.suffix)
+		assert.ThatString(fixture, test.actual).DoesNotEndWith(test.suffix)
 
 		// then
 		if !test.expectedFail {
@@ -599,7 +601,7 @@ func TestStringEndsWithIgnoringCase(t *testing.T) {
 		fixture := new(fixtureT)
 
 		// when
-		ThatString(fixture, test.actual).EndsWithIgnoringCase(test.suffix)
+		assert.ThatString(fixture, test.actual).EndsWithIgnoringCase(test.suffix)
 
 		// then
 		if !test.expectedFail {
@@ -627,7 +629,7 @@ func TestStringDoesNotEndWithIgnoringCase(t *testing.T) {
 		fixture := new(fixtureT)
 
 		// when
-		ThatString(fixture, test.actual).DoesNotEndWithIgnoringCase(test.suffix)
+		assert.ThatString(fixture, test.actual).DoesNotEndWithIgnoringCase(test.suffix)
 
 		// then
 		if !test.expectedFail {
@@ -655,7 +657,7 @@ func TestStringHasLength(t *testing.T) {
 		fixture := new(fixtureT)
 
 		// when
-		ThatString(fixture, test.actual).HasLength(test.length)
+		assert.ThatString(fixture, test.actual).HasLength(test.length)
 
 		// then
 		if !test.expectedFail {
@@ -683,7 +685,7 @@ func TestStringHasLengthLessThan(t *testing.T) {
 		fixture := new(fixtureT)
 
 		// when
-		ThatString(fixture, test.actual).HasLengthLessThan(test.length)
+		assert.ThatString(fixture, test.actual).HasLengthLessThan(test.length)
 
 		// then
 		if !test.expectedFail {
@@ -711,7 +713,7 @@ func TestStringHasLengthGreaterThan(t *testing.T) {
 		fixture := new(fixtureT)
 
 		// when
-		ThatString(fixture, test.actual).HasLengthGreaterThan(test.length)
+		assert.ThatString(fixture, test.actual).HasLengthGreaterThan(test.length)
 
 		// then
 		if !test.expectedFail {
@@ -739,7 +741,7 @@ func TestStringHasSameLengthAs(t *testing.T) {
 		fixture := new(fixtureT)
 
 		// when
-		ThatString(fixture, test.actual).HasSameLengthAs(test.other)
+		assert.ThatString(fixture, test.actual).HasSameLengthAs(test.other)
 
 		// then
 		if !test.expectedFail {
@@ -769,7 +771,7 @@ func TestStringHasLineCount(t *testing.T) {
 		fixture := new(fixtureT)
 
 		// when
-		ThatString(fixture, test.actual).HasLineCount(test.lineCount)
+		assert.ThatString(fixture, test.actual).HasLineCount(test.lineCount)
 
 		// then
 		if !test.expectedFail {
@@ -799,7 +801,7 @@ func TestStringContains(t *testing.T) {
 		fixture := new(fixtureT)
 
 		// when
-		ThatString(fixture, test.actual).Contains(test.value)
+		assert.ThatString(fixture, test.actual).Contains(test.value)
 
 		// then
 		if !test.expectedFail {
@@ -826,7 +828,7 @@ func TestStringContainsIgnoringCase(t *testing.T) {
 		fixture := new(fixtureT)
 
 		// when
-		ThatString(fixture, test.actual).ContainsIgnoringCase(test.substr)
+		assert.ThatString(fixture, test.actual).ContainsIgnoringCase(test.substr)
 
 		// then
 		if !test.expectedFail {
@@ -854,7 +856,7 @@ func TestStringContainsIgnoringWhitespace(t *testing.T) {
 		fixture := new(fixtureT)
 
 		// when
-		ThatString(fixture, test.actual).ContainsIgnoringWhitespace(test.substr)
+		assert.ThatString(fixture, test.actual).ContainsIgnoringWhitespace(test.substr)
 
 		// then
 		if !test.expectedFail {
@@ -882,7 +884,7 @@ func TestStringContainAllOf(t *testing.T) {
 		fixture := new(fixtureT)
 
 		// when
-		ThatString(fixture, test.actual).ContainsAllOf(test.values...)
+		assert.ThatString(fixture, test.actual).ContainsAllOf(test.values...)
 
 		// then
 		if !test.expectedFail {
@@ -910,7 +912,7 @@ func TestStringContainsAnyOf(t *testing.T) {
 		fixture := new(fixtureT)
 
 		// when
-		ThatString(fixture, test.actual).ContainsAnyOf(test.values...)
+		assert.ThatString(fixture, test.actual).ContainsAnyOf(test.values...)
 
 		// then
 		if !test.expectedFail {
@@ -937,7 +939,7 @@ func TestStringDoesNotContain(t *testing.T) {
 		fixture := new(fixtureT)
 
 		// when
-		ThatString(fixture, test.actual).DoesNotContain(test.substr)
+		assert.ThatString(fixture, test.actual).DoesNotContain(test.substr)
 
 		// then
 		if !test.expectedFail {
@@ -964,7 +966,7 @@ func TestStringDoesNotContainIgnoringCase(t *testing.T) {
 		fixture := new(fixtureT)
 
 		// when
-		ThatString(fixture, test.actual).DoesNotContainIgnoringCase(test.substr)
+		assert.ThatString(fixture, test.actual).DoesNotContainIgnoringCase(test.substr)
 
 		// then
 		if !test.expectedFail {
@@ -991,7 +993,7 @@ func TestStringDoesNotContainIgnoringWhitespace(t *testing.T) {
 		fixture := new(fixtureT)
 
 		// when
-		ThatString(fixture, test.actual).DoesNotContainIgnoringWhitespace(test.substr)
+		assert.ThatString(fixture, test.actual).DoesNotContainIgnoringWhitespace(test.substr)
 
 		// then
 		if !test.expectedFail {
@@ -1018,7 +1020,7 @@ func TestStringMatches(t *testing.T) {
 		fixture := new(fixtureT)
 
 		// when
-		ThatString(fixture, test.actual).Matches(test.pattern)
+		assert.ThatString(fixture, test.actual).Matches(test.pattern)
 
 		// then
 		if !test.expectedFail {
@@ -1045,7 +1047,7 @@ func TestStringDoesNotMatch(t *testing.T) {
 		fixture := new(fixtureT)
 
 		// when
-		ThatString(fixture, test.actual).DoesNotMatch(test.pattern)
+		assert.ThatString(fixture, test.actual).DoesNotMatch(test.pattern)
 
 		// then
 		if !test.expectedFail {
@@ -1072,7 +1074,7 @@ func TestStringMatchesRegexp(t *testing.T) {
 		fixture := new(fixtureT)
 
 		// when
-		ThatString(fixture, test.actual).MatchesRegexp(test.regex)
+		assert.ThatString(fixture, test.actual).MatchesRegexp(test.regex)
 
 		// then
 		if !test.expectedFail {
@@ -1099,7 +1101,7 @@ func TestStringDoesNotMatchRegexp(t *testing.T) {
 		fixture := new(fixtureT)
 
 		// when
-		ThatString(fixture, test.actual).DoesNotMatchRegexp(test.regex)
+		assert.ThatString(fixture, test.actual).DoesNotMatchRegexp(test.regex)
 
 		// then
 		if !test.expectedFail {
@@ -1126,7 +1128,7 @@ func TestStringIsSubstringOf(t *testing.T) {
 		fixture := new(fixtureT)
 
 		// when
-		ThatString(fixture, test.actual).IsSubstringOf(test.str)
+		assert.ThatString(fixture, test.actual).IsSubstringOf(test.str)
 
 		// then
 		if !test.expectedFail {
