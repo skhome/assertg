@@ -11,7 +11,6 @@ type sliceTest struct {
 	slice   []string
 	num     int
 	other   []string
-	element string
 	ok      bool
 	message string
 }
