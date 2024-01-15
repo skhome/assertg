@@ -37,7 +37,7 @@ func runTests[E any](t *testing.T, tests []E) func(execTest testExecutor[E]) {
 
 func assertErrorMessage(t *testing.T, fixture *fixtureT, message string) {
 	t.Helper()
-	if !strings.Contains(fixture.message, fmt.Sprintf("Error: %s", message)) {
+	if !strings.Contains(fixture.message, message) {
 		t.Errorf("expected to fail with error message %q, but got %#v", message, fixture.message)
 	}
 }

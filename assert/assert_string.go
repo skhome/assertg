@@ -1,722 +1,854 @@
 package assert
 
 import (
-	"fmt"
 	"regexp"
 	"slices"
 	"strings"
-	"unicode"
+
+	check "github.com/skhome/assertg/check"
 )
 
 // StringAssert provides assertions on strings.
 type StringAssert struct {
-	t           TestingT
-	message     string
-	description string
-	actual      string
-}
-
-// As sets an optional description for this assertion.
-func (a *StringAssert) As(format string, args ...any) *StringAssert {
-	a.description = fmt.Sprintf(format, args...)
-	return a
-}
-
-// WithFailMessage overrides the failure message.
-func (a *StringAssert) WithFailMessage(format string, args ...any) *StringAssert {
-	a.message = fmt.Sprintf(format, args...)
-	return a
-}
-
-// failWithMessage records an assertion failure.
-func (a *StringAssert) failWithMessage(format string, args ...any) {
-	message := a.message
-	if len(message) == 0 {
-		message = fmt.Sprintf(format, args...)
-	}
-	Fail(a.t, message, a.description)
+	*BaseAssert[StringAssert]
+	actual string
 }
 
 // IsEmpty verifies that the actual string is empty, i.e. has a length of 0.
 //
-// Examples:
+//	// assertion fill pass
+//	 assert.ThatString(t, "").IsEmpty()
 //
-//	assert.ThatString(t, "").IsEmpty() // OK
-//	assert.ThatString(t, " ").IsEmpty() // FAIL
-//	assert.ThatString(t, "a").IsEmpty() // FAIL
+//	// assertion will fail
+//	assert.ThatString(t, " ").IsEmpty()
+//	assert.ThatString(t, "a").IsEmpty()
 func (a *StringAssert) IsEmpty() *StringAssert {
 	if h, ok := a.t.(tHelper); ok {
 		h.Helper()
 	}
 	if len(a.actual) > 0 {
-		a.failWithMessage("expected string to be empty, but got %q", a.actual)
+		a.FailWithMessage("expected string to be empty, but got %s", a.actual)
 	}
 	return a
 }
 
 // IsNotEmpty verifies that the actual string is not empty, i.e. has a length of 1 or more.
 //
-// Examples:
+//	// assertion will pass
+//	assert.ThatString(t, "Frodo").IsNotEmpty()
+//	assert.ThatString(t, " ").IsNotEmpty()
 //
-//	assert.ThatString(t, "Frodo").IsNotEmpty() // OK
-//	assert.ThatString(t, " ").IsNotEmpty() // OK
-//	assert.ThatString(t, "").IsNotEmpty() // FAIL
+//	// assertion will fail
+//	assert.ThatString(t, "").IsNotEmpty()
 func (a *StringAssert) IsNotEmpty() *StringAssert {
 	if h, ok := a.t.(tHelper); ok {
 		h.Helper()
 	}
 	if len(a.actual) == 0 {
-		a.failWithMessage("expected string to not be empty, but got %q", a.actual)
+		a.FailWithMessage("expected string to not be empty, but got %s", a.actual)
 	}
 	return a
 }
 
 // IsBlank verifies that the actual string is blank, i.e. empty or contains only whitespace characters.
 //
-// Examples:
+//	// assertion will pass
+//	assert.ThatString(t, "").IsBlank()
+//	assert.ThatString(t, " \t").IsBlank()
 //
-//	assert.ThatString(t, "").IsBlank() // OK
-//	assert.ThatString(t, " \t").IsBlank() // OK
-//	assert.ThatString(t, " Frodo").IsBlank() // FAIL
+//	// assertion will fail
+//	assert.ThatString(t, "a").IsBlank()
 func (a *StringAssert) IsBlank() *StringAssert {
 	if h, ok := a.t.(tHelper); ok {
 		h.Helper()
 	}
-	if len(strings.TrimSpace(a.actual)) > 0 {
-		a.failWithMessage("expected string to be blank, but got %q", a.actual)
+	if !check.StringIsBlank(a.actual) {
+		a.FailWithMessage("expected string to be blank, but got %s", a.actual)
 	}
 	return a
 }
 
 // IsNotBlank verifies that the actual string is not blank, i.e. not empty and contains at least one non-whitespace character.
 //
-// Examples:
+//	// assertion will pass
+//	assert.ThatString(t, "Frodo").IsNotBlank()
 //
-//	assert.ThatString(t, "Frodo").IsNotBlank() // OK
+//	// assertion will fail
 //	assert.ThatString(t, "").IsNotBlank() // FAIL
 //	assert.ThatString(t, " ").IsNotBlank() // FAIL
 func (a *StringAssert) IsNotBlank() *StringAssert {
 	if h, ok := a.t.(tHelper); ok {
 		h.Helper()
 	}
-	if len(strings.TrimSpace(a.actual)) == 0 {
-		a.failWithMessage("expected string to not be blank, but got %q", a.actual)
+	if check.StringIsBlank(a.actual) {
+		a.FailWithMessage("expected string to not be blank, but got %s", a.actual)
 	}
 	return a
 }
 
 // ContainsWhitespace verifies that the actual string contains one or more whitespace characters.
 //
-// Examples:
+//	// assertion will pass
+//	assert.ThatString(t, " ").ContainsWhitespace()
+//	assert.ThatString(t, "Frodo Baggins").ContainsWhitespace()
 //
-//	assert.ThatString(t, " ").ContainsWhitespace() // OK
-//	assert.ThatString(t, "Frodo Baggins").ContainsWhitespace() // OK
-//	assert.ThatString(t, "").ContainsWhitespace() // FAIL
-//	assert.ThatString(t, "Frodo").ContainsWhitespace() // FAIL
+//	// assertion will fail
+//	assert.ThatString(t, "").ContainsWhitespace()
+//	assert.ThatString(t, "Frodo").ContainsWhitespace()
 func (a *StringAssert) ContainsWhitespace() *StringAssert {
 	if h, ok := a.t.(tHelper); ok {
 		h.Helper()
 	}
-	if !strings.ContainsFunc(a.actual, unicode.IsSpace) {
-		a.failWithMessage("expected string to contain whitespace characters, but got %q", a.actual)
+	if !check.StringContainsWhitespace(a.actual) {
+		a.FailWithMessage("expected string to contain whitespace characters, but got %s", a.actual)
 	}
 	return a
 }
 
 // DoesNotContainWhitespace verifies that the actual string does not contain any whitespace characters.
 //
-// Examples:
+//	// assertion will pass
+//	assert.ThatString(t, "").DoesNotContainWhitespace()
+//	assert.ThatString(t, "Frodo").DoesNotContainWhitespace()
 //
-//	assert.ThatString(t, "").DoesNotContainWhitespace() // OK
-//	assert.ThatString(t, "Frodo").DoesNotContainWhitespace() // OK
-//	assert.ThatString(t, " ").DoesNotContainWhitespace() // FAIL
-//	assert.ThatString(t, "Frodo Baggins").DoesNotContainWhitespace() // FAIL
+//	// assertion will fail
+//	assert.ThatString(t, " ").DoesNotContainWhitespace()
+//	assert.ThatString(t, "Frodo Baggins").DoesNotContainWhitespace()
 func (a *StringAssert) DoesNotContainWhitespace() *StringAssert {
 	if h, ok := a.t.(tHelper); ok {
 		h.Helper()
 	}
-	if strings.ContainsFunc(a.actual, unicode.IsSpace) {
-		a.failWithMessage("expected string to not contain whitespace characters, but got %q", a.actual)
+	if check.StringContainsWhitespace(a.actual) {
+		a.FailWithMessage("expected string to not contain whitespace characters, but got %s", a.actual)
 	}
 	return a
 }
 
 // HasLength verifies that the actual string has the expected length.
 //
-// Examples:
+//	// assertion will pass
+//	assert.ThatString(t, "Lord of the Rings").HasLength(17)
 //
-//	assert.ThatString(t, "Frodo").HasLength(5) // OK
-//	assert.ThatString(t, "Frodo").HasLength(4) // FAIL
+//	// assertion will fail
+//	assert.ThatString(t, "Lord of the RIngs").HasLength(10)
 func (a *StringAssert) HasLength(length int) *StringAssert {
 	if h, ok := a.t.(tHelper); ok {
 		h.Helper()
 	}
 	if len(a.actual) != length {
-		a.failWithMessage("expected string to have length of %d, but got %q", length, a.actual)
+		a.FailWithMessage("expected string to have length of %s, but got %s", length, a.actual)
 	}
 	return a
 }
 
-// HasLengthLessThan verifies that the actual string has a length less than expected.
+// HasLengthLessThan verifies that the actual string has a length less than the given value.
 //
-// Examples:
+//	// assertion will pass
+//	assert.ThatString(t, "Frodo").HasLengthLessThan(6)
 //
-//	assert.ThatString(t, "Frodo").HasLengthLessThan(6) // OK
-//	assert.ThatString(t, "Frodo").HasLengthLessThan(5) // FAIL
+//	// assertion will fail
+//	assert.ThatString(t, "Frodo").HasLengthLessThan(5)
 func (a *StringAssert) HasLengthLessThan(length int) *StringAssert {
 	if h, ok := a.t.(tHelper); ok {
 		h.Helper()
 	}
 	if len(a.actual) >= length {
-		a.failWithMessage("expected string to have length less than %d, but got %q", length, a.actual)
+		a.FailWithMessage("expected string to have length less than %s, but got %s", length, a.actual)
 	}
 	return a
 }
 
-// HasLengthGreaterThan verifies that the actual string has a length greater than expected.
+// HasLengthGreaterThan verifies that the actual string has a length greater than the given value.
 //
-// Examples:
+//	// assertion will pass
+//	assert.ThatString(t, "Frodo").HasLengthGreaterThan(4)
 //
-//	assert.ThatString(t, "Frodo").HasLengthGreaterThan(4) // OK
-//	assert.ThatString(t, "Frodo").HasLengthGreaterThan(5) // FAIL
+//	// assertion will fail
+//	assert.ThatString(t, "Frodo").HasLengthGreaterThan(5)
 func (a *StringAssert) HasLengthGreaterThan(length int) *StringAssert {
 	if h, ok := a.t.(tHelper); ok {
 		h.Helper()
 	}
 	if len(a.actual) <= length {
-		a.failWithMessage("expected string to have length greater than %d, but got %q", length, a.actual)
-	}
-	return a
-}
-
-// HasLineCount verifies that the actual string has the expected line count.
-//
-// Examples:
-//
-//	assert.ThatString(t, "first\nsecond").HasLineCount(2) // OK
-//	assert.ThatString(t, "first\nsecond\n").HasLengthGreaterThan(2) // FAIL
-func (a *StringAssert) HasLineCount(expectedLineCount int) *StringAssert {
-	if h, ok := a.t.(tHelper); ok {
-		h.Helper()
-	}
-	actualLineCount := strings.Count(a.actual, "\n") + 1
-	if expectedLineCount != actualLineCount {
-		a.failWithMessage("expected string to have %d lines, but got %q", expectedLineCount, a.actual)
+		a.FailWithMessage("expected string to have length greater than %s, but got %s", length, a.actual)
 	}
 	return a
 }
 
 // HasSameLengthAs verifies that the actual string has the same length as the given string.
 //
-// Examples:
+//	// assertion will pass
+//	assert.ThatString(t, "Gandalf").HasSameLengthAs("Saruman")
 //
-//	assert.ThatString(t, "Gandalf").HasSameLengthAs("Saruman") // OK
-//	assert.ThatString(t, "Gandalf").HasSameLengthAs("Frodo") // FAIL
+//	// assertion will fail
+//	assert.ThatString(t, "Gandalf").HasSameLengthAs("Frodo")
 func (a *StringAssert) HasSameLengthAs(other string) *StringAssert {
 	if h, ok := a.t.(tHelper); ok {
 		h.Helper()
 	}
 	if len(a.actual) != len(other) {
-		a.failWithMessage("expected string to have the same length as %q (%d), but got %q (%d)", other, len(other), a.actual, len(a.actual))
+		a.FailWithMessage("expected string to have the same length as %s, but got %s", other, a.actual)
+	}
+	return a
+}
+
+// HasLineCount verifies that the actual string has the expected line count.
+//
+//	// assertion will pass
+//	assert.ThatString(t, "first\nsecond").HasLineCount(2)
+//
+//	// assertion will fail
+//	assert.ThatString(t, "first\nsecond\n").HasLineCount(2)
+func (a *StringAssert) HasLineCount(expectedLineCount int) *StringAssert {
+	if h, ok := a.t.(tHelper); ok {
+		h.Helper()
+	}
+	if check.StringLineCount(a.actual) != expectedLineCount {
+		a.FailWithMessage("expected string to have %s lines, but got %s", expectedLineCount, a.actual)
 	}
 	return a
 }
 
 // IsEqualTo verifies that the actual string equals the given one.
 //
-// Examples:
+//	// assertion will pass
+//	assert.ThatString(t, "Frodo").IsEqualTo("Frodo")
 //
-//	assert.ThatString(t, "Frodo").IsEqualTo("Frodo") // OK
-//	assert.ThatString(t, "Frodo").IsEqualTo("Sam") // FAIL
+//	// assertion will fail
+//	assert.ThatString(t, "Frodo").IsEqualTo("Sam")
 func (a *StringAssert) IsEqualTo(expected string) *StringAssert {
 	if h, ok := a.t.(tHelper); ok {
 		h.Helper()
 	}
 	if expected != a.actual {
-		a.failWithMessage("expected string to equal %q, but got %q", expected, a.actual)
+		a.FailWithMessage("expected string to equal %s, but got %s", expected, a.actual)
 	}
 	return a
 }
 
 // IsNotEqualTo verifies that the actual string does not equal the given one.
 //
-// Examples:
+//	// assertion will pass
+//	assert.ThatString(t, "Frodo").IsNotEqualTo("Sam")
 //
-//	assert.ThatString(t, "Frodo").IsNotEqualTo("Sam") // OK
-//	assert.ThatString(t, "Frodo").IsNotEqualTo("Frodo") // FAIL
+//	// assertion will fail
+//	assert.ThatString(t, "Frodo").IsNotEqualTo("Frodo")
 func (a *StringAssert) IsNotEqualTo(expected string) *StringAssert {
 	if h, ok := a.t.(tHelper); ok {
 		h.Helper()
 	}
 	if expected == a.actual {
-		a.failWithMessage("expected string to not equal %q, but got %q", expected, a.actual)
+		a.FailWithMessage("expected string not to equal %s, but got %s", expected, a.actual)
 	}
 	return a
 }
 
 // IsEqualToIgnoringCase verifies that the actual string equals the given one, ignoring case considerations.
 //
-// Examples:
+//	// assertion will pass
+//	assert.ThatString(t, "Frodo").IsEqualToIgnoringCase("frodo")
 //
-//	assert.ThatString(t, "Frodo").IsEqualToIgnoringCase("frodo") // OK
-//	assert.ThatString(t, "frodo").IsEqualToIgnoringCase("gandalf") // FAIL
+//	// assertion will fail
+//	assert.ThatString(t, "Frodo").IsEqualToIgnoringCase("gandalf")
 func (a *StringAssert) IsEqualToIgnoringCase(expected string) *StringAssert {
 	if h, ok := a.t.(tHelper); ok {
 		h.Helper()
 	}
 	if !strings.EqualFold(expected, a.actual) {
-		a.failWithMessage("expected string to equal %q ignoring case, but got %q", expected, a.actual)
+		a.FailWithMessage("expected string to equal %s ignoring case, but got %s", expected, a.actual)
 	}
 	return a
 }
 
 // IsNotEqualToIgnoringCase verifies that the actual string is not equal the given one, ignoring case considerations.
 //
-// Examples:
+//	// assertion will pass
+//	assert.ThatString(t, "Gandalf").IsNotEqualToIgnoringCase("Frodo")
 //
-//	assert.ThatString(t, "Gandalf").IsNotEqualToIgnoringCase("Hobbit") // OK
-//	assert.ThatString(t, "Gandalf").IsNotEqualToIgnoringCase("gandalf") // FAIL
+//	// assertion will fail
+//	assert.ThatString(t, "Gandalf").IsNotEqualToIgnoringCase("gandalf")
 func (a *StringAssert) IsNotEqualToIgnoringCase(expected string) *StringAssert {
 	if h, ok := a.t.(tHelper); ok {
 		h.Helper()
 	}
 	if strings.EqualFold(expected, a.actual) {
-		a.failWithMessage("expected string to not equal %q ignoring case, but got %q", expected, a.actual)
+		a.FailWithMessage("expected string to not equal %s ignoring case, but got %s", expected, a.actual)
+	}
+	return a
+}
+
+// ContainsDigit verifies that the actual string contains only digits.
+//
+//	// assertion will pass
+//	assert.ThatString(t, "Bug8ear").ContainsDigit()
+//
+//	// assertion will fail
+//	assert.ThatString(t, "V").ContainsDigit()
+func (a *StringAssert) ContainsDigit() *StringAssert {
+	if h, ok := a.t.(tHelper); ok {
+		h.Helper()
+	}
+	if !check.StringContainsDigit(a.actual) {
+		a.FailWithMessage("expected string to contain digit, but got %s", a.actual)
 	}
 	return a
 }
 
 // ContainsOnlyDigits verifies that the actual string contains only digits.
 //
-// Examples:
+//	// assertion will pass
+//	assert.ThatString(t, "10").
+//	       ContainsOnlyDigits()
 //
-//	assert.ThatString(t, "10").ContainsOnlyDigits() // OK
-//	assert.ThatString(t, "10€").ContainsOnlyDigits() // FAIL
+//	// assertion will fail
+//	assert.ThatString(t, "10€").
+//	       ContainsOnlyDigits()
 func (a *StringAssert) ContainsOnlyDigits() *StringAssert {
 	if h, ok := a.t.(tHelper); ok {
 		h.Helper()
 	}
-	foundNonDigit := false
-	for _, r := range a.actual {
-		if !unicode.IsDigit(r) {
-			foundNonDigit = true
-			break
-		}
-	}
-	if foundNonDigit {
-		a.failWithMessage("expected string to only contain digits, but got %q", a.actual)
+	if !check.StringContainsOnlyDigits(a.actual) {
+		a.FailWithMessage("expected string to only contain digits, but got %s", a.actual)
 	}
 	return a
 }
 
 // ContainsOnlyOnce verifies that the actual string contains the given substring only once.
 //
-// Examples:
+//	// assertion will pass
+//	assert.ThatString(t, "Frodo").
+//	       ContainsOnlyOnce("do")
 //
-//	assert.ThatString(t, "Frodo").ContainsOnlyOnce("do") // OK
-//	assert.ThatString(t, "Frodo").ContainsOnlyOnce("o") // FAIL
-//	assert.ThatString(t, "Frodo").ContainsOnlyOnce("y") // FAIL
+//	// assertion will fail
+//	assert.ThatString(t, "Frodo").
+//	       ContainsOnlyOnce("o").
+//	       ContainsOnlyOnce("y")
 func (a *StringAssert) ContainsOnlyOnce(substr string) *StringAssert {
 	if h, ok := a.t.(tHelper); ok {
 		h.Helper()
 	}
-	firstIndex := strings.Index(a.actual, substr)
-	lastIndex := strings.LastIndex(a.actual, substr)
-	if firstIndex == -1 || firstIndex != lastIndex {
-		a.failWithMessage("expected string to contain %q only once, but got %q", substr, a.actual)
+	if strings.Count(a.actual, substr) != 1 {
+		a.FailWithMessage("expected string to contain %s only once, but got %s", substr, a.actual)
 	}
 	return a
 }
 
-// Contains verifies that the actual string contains the given substring.
+// Contains verifies that the actual string contains all the given values as substring.
 //
-// Examples:
+//	// assertion will pass
+//	assert.ThatString(t, "Gandalf the grey").
+//	       Contains("alf", "grey")
 //
-//	assert.ThatString(t, "Gandalf the grey").Contains("grey") // OK
-//	assert.ThatString(t, "Gandalf the grey").Contains("white") // FAIL
-func (a *StringAssert) Contains(substr string) *StringAssert {
+//	// assertion will fail
+//	assert.ThatString(t, "Gandalf the grey").
+//	       Contains("white")
+func (a *StringAssert) Contains(values ...string) *StringAssert {
 	if h, ok := a.t.(tHelper); ok {
 		h.Helper()
 	}
-	if !strings.Contains(a.actual, substr) {
-		a.failWithMessage("expected string to contain %q, but got %q", substr, a.actual)
-	}
-	return a
-}
-
-// ContainsIgnoringCase verifies that the actual string contains the given substring, ignoring case considerations.
-//
-// Examples:
-//
-//	assert.ThatString(t, "Gandalf the grey").ContainsIgnoringCase("gandalf") // OK
-//	assert.ThatString(t, "Gandalf the grey").ContainsIgnoringCase("white") // FAIL
-func (a *StringAssert) ContainsIgnoringCase(substr string) *StringAssert {
-	if h, ok := a.t.(tHelper); ok {
-		h.Helper()
-	}
-	if !strings.Contains(strings.ToLower(a.actual), strings.ToLower(substr)) {
-		a.failWithMessage("expected string to contain %q ignoring case, but got %q", substr, a.actual)
-	}
-	return a
-}
-
-func removeWhitespace(str string) string {
-	return strings.Map(func(r rune) rune {
-		if unicode.IsSpace(r) {
-			return -1
-		}
-		return r
-	}, str)
-}
-
-// ContainsIgnoringWhitespace verifies that the actual string contains the given substring, ignoring whitespace characters.
-//
-// Examples:
-//
-//	assert.ThatString(t, "Gandalf the grey").ContainsIgnoringWhitespace("thegrey") // OK
-//	assert.ThatString(t, "Gandalf the grey").ContainsIgnoringWhitespace("Grey") // FAIL
-func (a *StringAssert) ContainsIgnoringWhitespace(substr string) *StringAssert {
-	if h, ok := a.t.(tHelper); ok {
-		h.Helper()
-	}
-	if !strings.Contains(removeWhitespace(a.actual), removeWhitespace(substr)) {
-		a.failWithMessage("expected string to contain %q ignoring whitespace, but got %q", substr, a.actual)
-	}
-	return a
-}
-
-// ContainsAllOf verifies that the actual string contains all of the given substrings.
-//
-// Examples:
-//
-//	assert.ThatString(t, "Gandalf the grey").ContainsAllOf("Gandalf", "grey") // OK
-//	assert.ThatString(t, "Gandalf the grey").Contains("Gandalf", "white") // FAIL
-func (a *StringAssert) ContainsAllOf(values ...string) *StringAssert {
-	if h, ok := a.t.(tHelper); ok {
-		h.Helper()
-	}
-	foundMissing := false
-	for _, value := range values {
-		if !strings.Contains(a.actual, value) {
-			foundMissing = true
-			break
-		}
-	}
-	if foundMissing {
-		a.failWithMessage("expected string to contain all of %#v, but got %q", values, a.actual)
+	if !check.StringContains(a.actual, values) {
+		a.FailWithMessage("expected string to contain %s, but got %s", values, a.actual)
 	}
 	return a
 }
 
 // ContainsAnyOf verifies that the actual string contains any of the given substrings.
 //
-// Example:
+//	// assertion will pass
+//	assert.ThatString(t, "Gandalf the grey").
+//	       ContainsAnyOf("grey", "black")
 //
-//	assert.ThatString(t, "Gandalf the Gray").ContainsAnyOf("Gandalf", "Saruman") // OK
-//	assert.ThatString(t, "Bilbo Baggins").ContainsAnyOf("Frodo") // FAIL
+//	// assertion will fail
+//	assert.ThatString(t, "Gandalf the grey").
+//	       ContainsAnyOf("white", "black")
 func (a *StringAssert) ContainsAnyOf(values ...string) *StringAssert {
 	if h, ok := a.t.(tHelper); ok {
 		h.Helper()
 	}
-	foundAny := false
-	for _, value := range values {
-		if strings.Contains(a.actual, value) {
-			foundAny = true
-			break
-		}
+	if !check.StringContainsAny(a.actual, values) {
+		a.FailWithMessage("expected string to contain any of %s, but got %s", values, a.actual)
 	}
-	if !foundAny {
-		a.failWithMessage("expected string to contain any of %#v, but got %q", values, a.actual)
+	return a
+}
+
+// ContainsIgnoringCase verifies that the actual string contains the given substring, ignoring case considerations.
+//
+//	// assertion will pass
+//	assert.ThatString(t, "Gandalf the grey").
+//	       ContainsIgnoringCase("gandalf", "Grey")
+//
+//	// assertion will fail
+//	assert.ThatString(t, "Gandalf the grey").
+//	       ContainsIgnoringCase("white")
+func (a *StringAssert) ContainsIgnoringCase(values ...string) *StringAssert {
+	if h, ok := a.t.(tHelper); ok {
+		h.Helper()
+	}
+	if !check.StringContainsIgnoringCase(a.actual, values) {
+		a.FailWithMessage("expected string to contain %s ignoring case, but got %s", values, a.actual)
+	}
+	return a
+}
+
+// ContainsIgnoringWhitespace verifies that the actual string contains the given substring, ignoring whitespace characters.
+//
+//	// assertion will pass
+//	assert.ThatString(t, "Gandalf the grey").
+//	       ContainsIgnoringWhitespace("alf").
+//	       ContainsIgnoringWhitespace("alf", "grey").
+//	       ContainsIgnoringWhitespace("thegrey").
+//	       ContainsIgnoringWhitespace("thegr  ey").
+//	       ContainsIgnoringWhitespace("t h e\t grey")
+//
+//	// assertion will fail
+//	assert.ThatString(t, "Gandalf the grey").
+//	       ContainsIgnoringWhitespace("alF")
+func (a *StringAssert) ContainsIgnoringWhitespace(values ...string) *StringAssert {
+	if h, ok := a.t.(tHelper); ok {
+		h.Helper()
+	}
+	if !check.StringContainsIgnoringWhitespace(a.actual, values) {
+		a.FailWithMessage("expected string to contain %s ignoring whitespace, but got %s", values, a.actual)
 	}
 	return a
 }
 
 // DoesNotContain verifies that the actual string does not contain the given substring.
 //
-// Example:
+//	// assertion will pass
+//	assert.ThatString(t, "Frodo").
+//	       DoesNotContain("pippin").
+//	       DoesNotContain("fro", "sam")
 //
-//	assert.ThatString(t, "Frodo").DoesNotContain("Pippin") // OK
-//	assert.ThatString(t, "Frodo").DoesNotContain("do") // FAIL
-func (a *StringAssert) DoesNotContain(substr string) *StringAssert {
+//	// assertion will fail
+//	assert.ThatString(t, "Frodo").
+//	       DoesNotContain("Fro", "Gimli")
+func (a *StringAssert) DoesNotContain(values ...string) *StringAssert {
 	if h, ok := a.t.(tHelper); ok {
 		h.Helper()
 	}
-	if strings.Contains(a.actual, substr) {
-		a.failWithMessage("expected string to not contain %q, but got %q", substr, a.actual)
+	if check.StringContainsAny(a.actual, values) {
+		a.FailWithMessage("expected string to not contain %s, but got %s", values, a.actual)
 	}
 	return a
 }
 
 // DoesNotContainIgnoringCase verifies that the actual string does not contain the given substring, ignoring case considerations.
 //
-// Example:
+//	// assertion will pass
+//	assert.ThatString(t, "Frodo").
+//	       DoesNotContainIgnoringCase("pippin").
+//	       DoesNotContainIgnoringCase("Merry", "sam")
 //
-//	assert.ThatString(t, "Frodo").DoesNotContainIgnoringCase("sam") // OK
-//	assert.ThatString(t, "Frodo").DoesNotContainIgnoringCase("fro") // FAIL
-func (a *StringAssert) DoesNotContainIgnoringCase(substr string) *StringAssert {
+//	// assertion will fail
+//	assert.ThatString(t, "Frodo").
+//	       DoesNotContainIgnoringCase("Fro", "Gimli").
+//	       DoesNotContainIgnoringCase("fro")
+func (a *StringAssert) DoesNotContainIgnoringCase(values ...string) *StringAssert {
 	if h, ok := a.t.(tHelper); ok {
 		h.Helper()
 	}
-	if strings.Contains(strings.ToLower(a.actual), strings.ToLower(substr)) {
-		a.failWithMessage("expected string to not contain %q ignoring case, but got %q", substr, a.actual)
+	if check.StringContainsAnyIgnoringCase(a.actual, values) {
+		a.FailWithMessage("expected string to not contain %s ignoring case, but got %s", values, a.actual)
 	}
 	return a
 }
 
 // DoesNotContainIgnoringWhitespace verifies that the actual string does not contain the given substring, ignoring whitespace.
 //
-// Example:
+//	// assertion will pass
+//	assert.ThatString(t, "Gandalf the grey").
+//	       DoesNotContainIgnoringWhitespace("TheGrey")
 //
-//	assert.ThatString(t, "Gandalf the grey").DoesNotContainIgnoringWhitespace("TheGrey") // OK
-//	assert.ThatString(t, "Gandalf the grey").DoesNotContainIgnoringWhitespace("thegrey") // FAIL
-func (a *StringAssert) DoesNotContainIgnoringWhitespace(substr string) *StringAssert {
+//	// assertion will fail
+//	assert.ThatString(t, "Gandalf the grey").
+//	       DoesNotContainIgnoringWhitespace("thegrey")
+func (a *StringAssert) DoesNotContainIgnoringWhitespace(values ...string) *StringAssert {
 	if h, ok := a.t.(tHelper); ok {
 		h.Helper()
 	}
-	if strings.Contains(removeWhitespace(a.actual), removeWhitespace(substr)) {
-		a.failWithMessage("expected string to not contain %q ignoring whitespace, but got %q", substr, a.actual)
+	if check.StringContainsAnyIgnoringWhitespace(a.actual, values) {
+		a.FailWithMessage("expected string to not contain %s ignoring whitespace, but got %s", values, a.actual)
 	}
 	return a
 }
 
 // StartsWith verifies that the actual string starts with the given prefix.
 //
-// Example:
+//	// assertion will pass
+//	assert.ThatString(t, "Frodo").
+//	       StartsWith("Fro")
 //
-//	assert.ThatString(t, "Frodo").StartsWith("Fro") // OK
-//	assert.ThatString(t, "Frodo").StartsWith("fro") // FAIL
+//	// assertion will fail
+//	assert.ThatString(t, "Frodo").
+//	       StartsWith("fro")
 func (a *StringAssert) StartsWith(prefix string) *StringAssert {
 	if h, ok := a.t.(tHelper); ok {
 		h.Helper()
 	}
-	if !strings.HasPrefix(a.actual, prefix) {
-		a.failWithMessage("expected string to start with %q, but got %q", prefix, a.actual)
+	if !check.StringStartsWith(a.actual, prefix) {
+		a.FailWithMessage("expected string to start with %s, but got %s", prefix, a.actual)
 	}
 	return a
 }
 
 // DoesNotStartWith verifies that the actual string does not start with the given prefix.
 //
-// Example:
+//	// assertion will pass
+//	assert.ThatString(t, "Frodo").
+//	       DoesNotStartWith("fro")
 //
-//	assert.ThatString(t, "Frodo").DoesNotStartWith("fro") // OK
-//	assert.ThatString(t, "Frodo").DoesNotStartWith("") // FAIL
+//	// assertion will fail
+//	assert.ThatString(t, "Frodo").
+//	       DoesNotStartWith("")
 func (a *StringAssert) DoesNotStartWith(prefix string) *StringAssert {
 	if h, ok := a.t.(tHelper); ok {
 		h.Helper()
 	}
-	if strings.HasPrefix(a.actual, prefix) {
-		a.failWithMessage("expected string to not start with %q, but got %q", prefix, a.actual)
+	if check.StringStartsWith(a.actual, prefix) {
+		a.FailWithMessage("expected string not to start with %s, but got %s", prefix, a.actual)
 	}
 	return a
 }
 
 // StartsWithIgnoringCase verifies that the actual string starts with the given prefix, ignoring case considerations.
 //
-// Example:
+//	// assertion will pass
+//	assert.ThatString(t, "Gandalf the grey").
+//	       StartsWithIgnoringCase("Gandalf").
+//	       StartsWithIgnoringCase("gandalf")
 //
-//	assert.ThatString(t, "Frodo").StartsWith("fro") // OK
-//	assert.ThatString(t, "Frodo").StartsWith("gan") // FAIL
+//	// assertion will fail
+//	assert.ThatString(t, "Gandalf the grey").
+//	       StartsWith("grey")
 func (a *StringAssert) StartsWithIgnoringCase(prefix string) *StringAssert {
 	if h, ok := a.t.(tHelper); ok {
 		h.Helper()
 	}
-	if !strings.HasPrefix(strings.ToLower(a.actual), strings.ToLower(prefix)) {
-		a.failWithMessage("expected string to start with %q ignoring case, but got %q", prefix, a.actual)
+	if !check.StringStartsWithIgnoringCase(a.actual, prefix) {
+		a.FailWithMessage("expected string to start with %s ignoring case, but got %s", prefix, a.actual)
 	}
 	return a
 }
 
 // DoesNotStartWithIgnoringCase verifies that the actual string does not start with the given prefix, ignoring case considerations.
 //
-// Example:
+//	// assertion will pass
+//	assert.ThatString(t, "Gandalf the grey").
+//	       DoesNotStartWithIgnoringCase("fro").
+//	       DoesNotStartWithIgnoringCase("grey")
 //
-//	assert.ThatString(t, "Gandalf").DoesNotStartWithIgnoringCase("Fro") // OK
-//	assert.ThatString(t, "Gandalf").DoesNotStartWithIgnoringCase("gan") // FAIL
+//	// assertion will fail
+//	assert.ThatString(t, "Gandalf the grey").
+//	       DoesNotStartWithIgnoringCase("Gandalf").
+//	       DoesNotStartWithIgnoringCase("gandalf")
 func (a *StringAssert) DoesNotStartWithIgnoringCase(prefix string) *StringAssert {
 	if h, ok := a.t.(tHelper); ok {
 		h.Helper()
 	}
-	if strings.HasPrefix(strings.ToLower(a.actual), strings.ToLower(prefix)) {
-		a.failWithMessage("expected string to not start with %q ignoring case, but got %q", prefix, a.actual)
+	if check.StringStartsWithIgnoringCase(a.actual, prefix) {
+		a.FailWithMessage("expected string not to start with %s ignoring case, but got %s", prefix, a.actual)
 	}
 	return a
 }
 
 // EndsWith verifies that the actual string ends with the given suffix.
 //
-// Example:
+//	// assertion will pass
+//	assert.ThatString(t, "Frodo").
+//	       EndsWith("do")
 //
-//	assert.ThatString(t, "Frodo").EndsWith("do") // OK
-//	assert.ThatString(t, "Frodo").EndsWith("Fro") // FAIL
+//	// assertion will fail
+//	assert.ThatString(t, "Frodo").
+//	       EndsWith("Fro")
 func (a *StringAssert) EndsWith(suffix string) *StringAssert {
 	if h, ok := a.t.(tHelper); ok {
 		h.Helper()
 	}
-	if !strings.HasSuffix(a.actual, suffix) {
-		a.failWithMessage("expected string to end with %q, but got %q", suffix, a.actual)
+	if !check.StringEndsWith(a.actual, suffix) {
+		a.FailWithMessage("expected string to end with %s, but got %s", suffix, a.actual)
 	}
 	return a
 }
 
 // DoesNotEndWith verifies that the actual string does not end with the given suffix.
 //
-// Example:
+//	// assertion will pass
+//	assert.ThatString(t, "Frodo").
+//	       DoesNotEndWith("Fro")
 //
-//	assert.ThatString(t, "Frodo").DoesNotEndWith("Fro") // OK
-//	assert.ThatString(t, "Frodo").DoesNotEndWith("do") // FAIL
+//	// assertion will fail
+//	assert.ThatString(t, "Frodo").
+//	       DoesNotEndWith("do").
+//	       DoesNotEndWith("")
 func (a *StringAssert) DoesNotEndWith(suffix string) *StringAssert {
 	if h, ok := a.t.(tHelper); ok {
 		h.Helper()
 	}
-	if strings.HasSuffix(a.actual, suffix) {
-		a.failWithMessage("expected string not to end with %q, but got %q", suffix, a.actual)
+	if check.StringEndsWith(a.actual, suffix) {
+		a.FailWithMessage("expected string not to end with %s, but got %s", suffix, a.actual)
 	}
 	return a
 }
 
 // EndsWithIgnoringCase verifies that the actual string ends with the given suffix, ignoring case considerations.
 //
-// Example:
+//	// assertion will pass
+//	assert.ThatString(t, "Frodo").
+//	       EndsWithIgnoringCase("do").
+//	       EndsWithIgnoringCase("Do")
 //
-//	assert.ThatString(t, "Frodo").EndsWithIgnoringCase("Do") // OK
-//	assert.ThatString(t, "Frodo").EndsWithIgnoringCase("Fro") // FAIL
+//	// assertion will fail
+//	assert.ThatString(t, "Frodo").
+//	       EndsWithIgnoringCase("fro")
 func (a *StringAssert) EndsWithIgnoringCase(suffix string) *StringAssert {
 	if h, ok := a.t.(tHelper); ok {
 		h.Helper()
 	}
-	if !strings.HasSuffix(strings.ToLower(a.actual), strings.ToLower(suffix)) {
-		a.failWithMessage("expected string to end with %q ignoring case, but got %q", suffix, a.actual)
+	if !check.StringEndsWithIgnoringCase(a.actual, suffix) {
+		a.FailWithMessage("expected string to end with %s ignoring case, but got %s", suffix, a.actual)
 	}
 	return a
 }
 
 // DoesNotEndWithIgnoringCase verifies that the actual string does not end with the given suffix, ignoring case considerations.
 //
-// Example:
+//	// assertion will pass
+//	assert.ThatString(t, "Frodo").
+//	       DoesNotEndWithIgnoringCase("Fro")
 //
-//	assert.ThatString(t, "Frodo").DoesNotEndWithIgnoringCase("Fro") // OK
-//	assert.ThatString(t, "Frodo").DoesNotEndWithIgnoringCase("Do") // FAIL
+//	// assertion will fail
+//	assert.ThatString(t, "Frodo").
+//	       DoesNotEndWithIgnoringCase("do").
+//	       DoesNotEndWithIgnoringCase("DO")
 func (a *StringAssert) DoesNotEndWithIgnoringCase(suffix string) *StringAssert {
 	if h, ok := a.t.(tHelper); ok {
 		h.Helper()
 	}
-	if strings.HasSuffix(strings.ToLower(a.actual), strings.ToLower(suffix)) {
-		a.failWithMessage("expected string not to end with %q ignoring case, but got %q", suffix, a.actual)
+	if check.StringEndsWithIgnoringCase(a.actual, suffix) {
+		a.FailWithMessage("expected string not to end with %s ignoring case, but got %s", suffix, a.actual)
 	}
 	return a
 }
 
-// Matches verifies that the actual string matches the given regular expression.
+// MatchesPattern verifies that the actual string matches the given regular expression pattern.
 //
-// Example:
+//	// assertion will pass
+//	assert.ThatString(t, "Frodo").
+//	       MatchesPattern(`..o.o`)
 //
-//	assert.ThatString(t, "Frodo").MatchesString(`..o.o`) // OK
-//	assert.ThatString(t, "Frodo").MatchesString(`.*f`) // FAIL
-func (a *StringAssert) Matches(pattern string) *StringAssert {
+//	// assertion will fail
+//	assert.ThatString(t, "Frodo").
+//	       MatchesPattern(`.*d$`)
+func (a *StringAssert) MatchesPattern(pattern string) *StringAssert {
 	if h, ok := a.t.(tHelper); ok {
 		h.Helper()
 	}
-	regex := regexp.MustCompile(pattern)
-	if !regex.MatchString(a.actual) {
-		a.failWithMessage("expected string to match %q, but got %q", pattern, a.actual)
+	if !check.StringMatchesRegexp(a.actual, regexp.MustCompile(pattern)) {
+		a.FailWithMessage("expected string to match %s, but got %s", pattern, a.actual)
 	}
 	return a
 }
 
-// DoesNotMatch verifies that the actual string does not match the given regular expression.
+// DoesNotMatchPattern verifies that the actual string does not match the given regular expression.
 //
-// Example:
+//	// assertion will pass
+//	assert.ThatString(t, "Frodo").
+//	       DoesNotMatchPattern(`.*d$`)
 //
-//	assert.ThatString(t, "Frodo").DoesNotMatch(`.*d$`) // OK
-//	assert.ThatString(t, "Frodo").DoesNotMatch(`F.*`) // FAIL
-func (a *StringAssert) DoesNotMatch(pattern string) *StringAssert {
+//	// assertion will fail
+//	assert.ThatString(t, "Frodo").
+//	       DoesNotMatchPattern(`..o.o`)
+func (a *StringAssert) DoesNotMatchPattern(pattern string) *StringAssert {
 	if h, ok := a.t.(tHelper); ok {
 		h.Helper()
 	}
-	regex := regexp.MustCompile(pattern)
-	if regex.MatchString(a.actual) {
-		a.failWithMessage("expected string not to match %q, but got %q", pattern, a.actual)
+	if check.StringMatchesRegexp(a.actual, regexp.MustCompile(pattern)) {
+		a.FailWithMessage("expected string not to match %s, but got %s", pattern, a.actual)
 	}
 	return a
 }
 
 // MatchesRegexp verifies that the actual string matches the given compiled regular expression.
 //
-// Example:
+//	// assertion will pass
+//	assert.ThatString(t, "Frodo").
+//	       MatchesRegexp(regexp.MustCompile(`..o.o`))
 //
-//	assert.ThatString(t, "Frodo").MatchesString(regexp.MustCompile(`..o.o`)) // OK
-//	assert.ThatString(t, "Frodo").MatchesString(regexp.MustCompile(`.*f`)) // FAIL
-func (a *StringAssert) MatchesRegexp(regex *regexp.Regexp) *StringAssert {
+//	// assertion will fail
+//	assert.ThatString(t, "Frodo").
+//	       MatchesRegexp(regexp.MustCompile(`.*f`))
+func (a *StringAssert) MatchesRegexp(re *regexp.Regexp) *StringAssert {
 	if h, ok := a.t.(tHelper); ok {
 		h.Helper()
 	}
-	if !regex.MatchString(a.actual) {
-		a.failWithMessage("expected string to match \"%v\", but got %q", regex, a.actual)
+	if !check.StringMatchesRegexp(a.actual, re) {
+		a.FailWithMessage("expected string to match %s, but got %s", re, a.actual)
 	}
 	return a
 }
 
 // DoesNotMatchRegexp verifies that the actual string does not match the given compiled regular expression.
 //
-// Example:
+//	// assertion will pass
+//	assert.ThatString(t, "Frodo").
+//	       DoesNotMatchRegexp(regexp.MustCompile(`.*d$`))
 //
-//	assert.ThatString(t, "Frodo").DoesNotMatchRegexp(regexp.MustCompile(`.*f`)) // OK
-//	assert.ThatString(t, "Frodo").DoesNotMatchRegexp(regexp.MustCompile(`..o.o`)) // FAIL
-func (a *StringAssert) DoesNotMatchRegexp(regex *regexp.Regexp) *StringAssert {
+//	// assertion will fail
+//	assert.ThatString(t, "Frodo").
+//	       DoesNotMatchRegexp(regexp.MustCompile(`..o.o`))
+func (a *StringAssert) DoesNotMatchRegexp(re *regexp.Regexp) *StringAssert {
 	if h, ok := a.t.(tHelper); ok {
 		h.Helper()
 	}
-	if regex.MatchString(a.actual) {
-		a.failWithMessage("expected string to match \"%v\", but got %q", regex, a.actual)
+	if check.StringMatchesRegexp(a.actual, re) {
+		a.FailWithMessage("expected string to match %s, but got %s", re, a.actual)
+	}
+	return a
+}
+
+// IsEqualToIgnoringWhitespace verifies that the actual string is equal to the given one, ignoring whitespace differences.
+//
+//	// assertion will pass
+//	assert.ThatString(t, "Game of Thrones").
+//	       IsEqualToIgnoringWhitespace("Game   of   Thrones").
+//	       IsEqualToIgnoringWhitespace("  Game of   Thrones  ").
+//	       IsEqualToIgnoringWhitespace("  Game of Thrones  ").
+//	       IsEqualToIgnoringWhitespace("\tGame of Thrones\n")
+//
+//	// assertion will fail
+//	assert.ThatString(t, "Game of Thrones").
+//	       IsEqualToIgnoringWhitespace("Game OF Thrones")
+func (a *StringAssert) IsEqualToIgnoringWhitespace(value string) *StringAssert {
+	if h, ok := a.t.(tHelper); ok {
+		h.Helper()
+	}
+	if !check.StringEqualsIgnoringWhitespace(a.actual, value) {
+		a.FailWithMessage("expected string to equal ignoring whitespace %s, but got %s", value, a.actual)
+	}
+	return a
+}
+
+// IsNotEqualToIgnoringWhitespace verifies that the actual string does not equal the given one, ignoring whitespace differences.
+//
+//	// assertion will pass
+//	assert.ThatString(t, "Game of Thrones").
+//	       IsNotEqualToIgnoringWhitespace("Game OF Thrones")
+//
+//	// assertion will fail
+//	assert.ThatString(t, "Game of Thrones").
+//	       IsNotEqualToIgnoringWhitespace("Game   of   Thrones").
+//	       IsNotEqualToIgnoringWhitespace("  Game of   Thrones  ").
+//	       IsNotEqualToIgnoringWhitespace("  Game of Thrones  ").
+//	       IsNotEqualToIgnoringWhitespace("\tGame of Thrones\n")
+func (a *StringAssert) IsNotEqualToIgnoringWhitespace(value string) *StringAssert {
+	if h, ok := a.t.(tHelper); ok {
+		h.Helper()
+	}
+	if check.StringEqualsIgnoringWhitespace(a.actual, value) {
+		a.FailWithMessage("expected string not to equal ignoring whitespace %s, but got %s", value, a.actual)
 	}
 	return a
 }
 
 // IsSubstringOf verifies that the actual string is a substring of the given string.
 //
-// Example:
+//	// assertion will pass
+//	assert.ThatString(t, "Lego").
+//	       IsSubstringOf("Legolas").
+//	       IsSubstringOf("Lego")
 //
-//	assert.ThatString(t, "Lego").IsSubstringOf("Legolas") // OK
-//	assert.ThatString(t, "Frodo").IsSubstringOf("Fro") // FAIL
+//	// assertion will fail
+//	assert.ThatString(t, "Frodo").
+//	       IsSubstringOf("Frod")
 func (a *StringAssert) IsSubstringOf(str string) *StringAssert {
 	if h, ok := a.t.(tHelper); ok {
 		h.Helper()
 	}
 	if !strings.Contains(str, a.actual) {
-		a.failWithMessage("expected string to be a substring of %q, but got %q", str, a.actual)
+		a.FailWithMessage("expected string to be a substring of %s, but got %s", str, a.actual)
 	}
 	return a
 }
 
 // IsIn verifies that the actual string is present in the given slice.
 //
-// Example:
+//	hobbits := []string{"Frodo", "Sam", "Merry", "Pippin", "Bilbo"}
 //
-//	assert.ThatString(t, "nenya").IsIn([]string{"vilya", "nenya", "narya"}) // OK
-//	assert.ThatString(t, "one").IsIn([]string{"vilya", "nenya", "narya"}) // FAIL
+//	// assertion will pass
+//	assert.ThatString(t, "Frodo").
+//	       IsIn(hobbits)
+//
+//	// assertion will fail
+//	assert.ThatString(t, "Legolas").
+//	       IsIn(hobbits)
 func (a *StringAssert) IsIn(slice []string) *StringAssert {
 	if h, ok := a.t.(tHelper); ok {
 		h.Helper()
 	}
 	if !slices.Contains(slice, a.actual) {
-		a.failWithMessage("expected string to be present in %#v, but got %q", slice, a.actual)
+		a.FailWithMessage("expected string to be present in %s, but got %s", slice, a.actual)
 	}
 	return a
 }
 
 // IsNotIn verifies that the actual string is not present in the given slice.
 //
-// Example:
+//	hobbits := []string{"Frodo", "Sam", "Merry", "Pippin", "Bilbo"}
 //
-//	assert.ThatString(t, "one").IsNotIn([]string{"vilya", "nenya", "narya"}) // OK
-//	assert.ThatString(t, "nenya").IsNotIn([]string{"vilya", "nenya", "narya"}) // FAIL
+//	// assertion will pass
+//	assert.ThatString(t, "Legolas").
+//	       IsIn(hobbits)
+//
+//	// assertion will fail
+//	assert.ThatString(t, "Frodo").
+//	       IsIn(hobbits)
 func (a *StringAssert) IsNotIn(slice []string) *StringAssert {
 	if h, ok := a.t.(tHelper); ok {
 		h.Helper()
 	}
 	if slices.Contains(slice, a.actual) {
-		a.failWithMessage("expected string not to be present in %#v, but got %q", slice, a.actual)
+		a.FailWithMessage("expected string not to be present in %s, but got %s", slice, a.actual)
+	}
+	return a
+}
+
+// IsLowerCase verifies that is actual string is all lower case.
+//
+//	// assertions will pass
+//	assert.ThatString(t, "legolas").IsLowerCase()
+//	assert.ThatString(t, "").IsLowerCase()
+//	assert.ThatString(t, ".").IsLowerCase()
+//	assert.ThatString(t, "42").IsLowerCase()
+//
+//	// assertions will fail
+//	assert.ThatString(t, "Legolas").IsLowerCase()
+func (a *StringAssert) IsLowerCase() *StringAssert {
+	if h, ok := a.t.(tHelper); ok {
+		h.Helper()
+	}
+	if a.actual != strings.ToLower(a.actual) {
+		a.FailWithMessage("expected string to be all lower case, but got %s", a.actual)
+	}
+	return a
+}
+
+// IsUpperCase verifies that is actual string is all upper case.
+//
+//	// assertions will pass
+//	assert.ThatString(t, "LEGOLAS").IsUpperCase()
+//	assert.ThatString(t, "").IsUpperCase()
+//	assert.ThatString(t, ".").IsUpperCase()
+//	assert.ThatString(t, "42").IsUpperCase()
+//
+//	// assertions will fail
+//	assert.ThatString(t, "Legolas").IsUpperCase()
+func (a *StringAssert) IsUpperCase() *StringAssert {
+	if h, ok := a.t.(tHelper); ok {
+		h.Helper()
+	}
+	if a.actual != strings.ToUpper(a.actual) {
+		a.FailWithMessage("expected string to be all upper case, but got %s", a.actual)
 	}
 	return a
 }

@@ -1,28 +1,34 @@
 package assert
 
-// TestingT is an interface wrapper for *testing.T
-type TestingT interface {
-	Errorf(format string, args ...any)
-}
-
-// Predicate is a function that returns if a value meets a condition.
-type Predicate[T any] func(value T) bool
-
-// Condition is a function to assert a condition.
-type Condition[T any] func(value T)
-
 // ThatString starts assertions on a string.
 func ThatString(t TestingT, actual string) *StringAssert {
 	if h, ok := t.(tHelper); ok {
 		h.Helper()
 	}
-	return &StringAssert{t: t, actual: actual}
+	stringAssert := &StringAssert{actual: actual}
+	baseAssert := &BaseAssert[StringAssert]{t: t, info: NewWritableAssertionInfo(), a: stringAssert}
+	stringAssert.BaseAssert = baseAssert
+	return stringAssert
 }
 
 // ThatSlice starts assertions on a slice.
-func ThatSlice[E any](t TestingT, actual []E) *SliceAssert[E] {
+func ThatSlice[T ~[]E, E any](t TestingT, actual T) *SliceAssert[E] {
 	if h, ok := t.(tHelper); ok {
 		h.Helper()
 	}
-	return &SliceAssert[E]{t: t, actual: actual}
+	sliceAssert := &SliceAssert[E]{actual: actual}
+	baseAssert := &BaseAssert[SliceAssert[E]]{t: t, info: NewWritableAssertionInfo(), a: sliceAssert}
+	sliceAssert.BaseAssert = baseAssert
+	return sliceAssert
+}
+
+// ThatBool starts assertions on a bool.
+func ThatBool(t TestingT, actual bool) *BoolAssert {
+	if h, ok := t.(tHelper); ok {
+		h.Helper()
+	}
+	boolAssert := &BoolAssert{actual: actual}
+	baseAssert := &BaseAssert[BoolAssert]{t: t, info: NewWritableAssertionInfo(), a: boolAssert}
+	boolAssert.BaseAssert = baseAssert
+	return boolAssert
 }

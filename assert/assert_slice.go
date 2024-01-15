@@ -1,35 +1,11 @@
 package assert
 
-import (
-	"fmt"
-)
+import "github.com/skhome/assertg/check"
 
+// SliceAssert provides assertions on slices.
 type SliceAssert[E any] struct {
-	t           TestingT
-	message     string
-	description string
-	actual      []E
-}
-
-// As sets an optional description for this assertion.
-func (a *SliceAssert[E]) As(format string, args ...any) *SliceAssert[E] {
-	a.description = fmt.Sprintf(format, args...)
-	return a
-}
-
-// WithFailMessage overrides the failure message.
-func (a *SliceAssert[E]) WithFailMessage(format string, args ...any) *SliceAssert[E] {
-	a.message = fmt.Sprintf(format, args...)
-	return a
-}
-
-// failWithMessage records an assertion failure.
-func (a *SliceAssert[E]) failWithMessage(format string, args ...any) {
-	message := a.message
-	if len(message) == 0 {
-		message = fmt.Sprintf(format, args...)
-	}
-	Fail(a.t, message, a.description)
+	*BaseAssert[SliceAssert[E]]
+	actual []E
 }
 
 // IsNil verifies that the actual slice is nil.
@@ -44,7 +20,7 @@ func (a *SliceAssert[E]) IsNil() *SliceAssert[E] {
 		h.Helper()
 	}
 	if a.actual != nil {
-		a.failWithMessage("expected slice to be nil, but got %#v", a.actual)
+		a.FailWithMessage("expected slice to be nil, but got %s", a.actual)
 	}
 	return a
 }
@@ -61,7 +37,7 @@ func (a *SliceAssert[E]) IsNotNil() *SliceAssert[E] {
 		h.Helper()
 	}
 	if a.actual == nil {
-		a.failWithMessage("expected slice to not be nil, but got %#v", a.actual)
+		a.FailWithMessage("expected slice to not be nil, but got %s", a.actual)
 	}
 	return a
 }
@@ -79,10 +55,10 @@ func (a *SliceAssert[E]) IsEmpty() *SliceAssert[E] {
 	if h, ok := a.t.(tHelper); ok {
 		h.Helper()
 	}
-	if a.message == "" {
-		a.WithFailMessage("expected slice to be empty, but got %#v", a.actual)
+	if !check.SliceHasSize(a.actual, 0) {
+		a.FailWithMessage("expected slice to be empty, but got %s", a.actual)
 	}
-	return a.HasSize(0)
+	return a
 }
 
 // IsNotEmpty verifies that the actual slice is not empty.
@@ -97,10 +73,10 @@ func (a *SliceAssert[E]) IsNotEmpty() *SliceAssert[E] {
 	if h, ok := a.t.(tHelper); ok {
 		h.Helper()
 	}
-	if a.message == "" {
-		a.WithFailMessage("expected slice to not be empty, but got %#v", a.actual)
+	if check.SliceHasSize(a.actual, 0) {
+		a.FailWithMessage("expected slice to not be empty, but got %s", a.actual)
 	}
-	return a.HasSizeGreaterThan(0)
+	return a
 }
 
 // HasSize verifies that the actual slice has the given size.
@@ -115,8 +91,8 @@ func (a *SliceAssert[E]) HasSize(size int) *SliceAssert[E] {
 	if h, ok := a.t.(tHelper); ok {
 		h.Helper()
 	}
-	if len(a.actual) != size {
-		a.failWithMessage("expected slice to have a size of %d, but got %#v", size, a.actual)
+	if !check.SliceHasSize(a.actual, size) {
+		a.FailWithMessage("expected slice to have a size of %s, but got %s", size, a.actual)
 	}
 	return a
 }
@@ -128,12 +104,12 @@ func (a *SliceAssert[E]) HasSize(size int) *SliceAssert[E] {
 //
 //	// assertion will fail
 //	assert.ThatSlice(t, []string{}).HasSizeGreaterThan(0)
-func (a *SliceAssert[E]) HasSizeGreaterThan(boundary int) *SliceAssert[E] {
+func (a *SliceAssert[E]) HasSizeGreaterThan(size int) *SliceAssert[E] {
 	if h, ok := a.t.(tHelper); ok {
 		h.Helper()
 	}
-	if len(a.actual) <= boundary {
-		a.failWithMessage("expected slice to have a size greater than %d, but got %#v", boundary, a.actual)
+	if !check.SliceHasSizeGreaterThan(a.actual, size) {
+		a.FailWithMessage("expected slice to have a size greater than %s, but got %s", size, a.actual)
 	}
 	return a
 }
@@ -145,12 +121,12 @@ func (a *SliceAssert[E]) HasSizeGreaterThan(boundary int) *SliceAssert[E] {
 //
 //	// assertion will fail
 //	assert.ThatSlice(t, []string{"Frodo"}).HasSizeLessThan(1)
-func (a *SliceAssert[E]) HasSizeLessThan(boundary int) *SliceAssert[E] {
+func (a *SliceAssert[E]) HasSizeLessThan(size int) *SliceAssert[E] {
 	if h, ok := a.t.(tHelper); ok {
 		h.Helper()
 	}
-	if len(a.actual) >= boundary {
-		a.failWithMessage("expected slice to have a size less than %d, but got %#v", boundary, a.actual)
+	if !check.SliceHasSizeLessThan(a.actual, size) {
+		a.FailWithMessage("expected slice to have a size less than %s, but got %s", size, a.actual)
 	}
 	return a
 }
@@ -169,7 +145,7 @@ func (a *SliceAssert[E]) HasSameSizeAs(other []E) *SliceAssert[E] {
 		h.Helper()
 	}
 	if len(a.actual) != len(other) {
-		a.failWithMessage("expected slice to have the same size as %#v (%d), but got %#v (%d)", other, len(other), a.actual, len(a.actual))
+		a.FailWithMessage("expected slice to have the same size as %s, but got %s", other, a.actual)
 	}
 	return a
 }
@@ -190,13 +166,13 @@ func (a *SliceAssert[E]) Contains(elements ...E) *SliceAssert[E] {
 	}
 	notFound := false
 	for i := range elements {
-		if !SliceContainsEntry(a.actual, elements[i]) {
+		if !check.SliceContainsEntry(a.actual, elements[i]) {
 			notFound = true
 			break
 		}
 	}
 	if notFound {
-		a.failWithMessage("expected slice to contain %#v, but got %#v", elements, a.actual)
+		a.FailWithMessage("expected slice to contain %s, but got %s", elements, a.actual)
 	}
 	return a
 }
@@ -218,7 +194,7 @@ func (a *SliceAssert[E]) ContainsOnly(elements ...E) *SliceAssert[E] {
 	}
 	missed := false
 	for i := range elements {
-		if !SliceContainsEntry(a.actual, elements[i]) {
+		if !check.SliceContainsEntry(a.actual, elements[i]) {
 			missed = true
 			break
 		}
@@ -226,14 +202,14 @@ func (a *SliceAssert[E]) ContainsOnly(elements ...E) *SliceAssert[E] {
 	extraneous := false
 	if !missed {
 		for i := range a.actual {
-			if !SliceContainsEntry(elements, a.actual[i]) {
+			if !check.SliceContainsEntry(elements, a.actual[i]) {
 				extraneous = true
 				break
 			}
 		}
 	}
 	if missed || extraneous {
-		a.failWithMessage("expected slice to contain only %#v, but got %#v", elements, a.actual)
+		a.FailWithMessage("expected slice to contain only %s, but got %s", elements, a.actual)
 	}
 	return a
 }
@@ -253,13 +229,13 @@ func (a *SliceAssert[E]) ContainsOnlyOnce(elements ...E) *SliceAssert[E] {
 	}
 	found := false
 	for i := range elements {
-		if SliceContainsEntryCount(a.actual, elements[i]) != 1 {
+		if check.SliceContainsEntryCount(a.actual, elements[i]) != 1 {
 			found = true
 			break
 		}
 	}
 	if found {
-		a.failWithMessage("expected slice to contain %#v only once, but got %#v", elements, a.actual)
+		a.FailWithMessage("expected slice to contain %s only once, but got %s", elements, a.actual)
 	}
 	return a
 }
@@ -275,9 +251,9 @@ func (a *SliceAssert[E]) ContainsExactly(elements ...E) *SliceAssert[E] {
 	if h, ok := a.t.(tHelper); ok {
 		h.Helper()
 	}
-	containsExactly := SliceIsEqual(elements, a.actual)
+	containsExactly := check.SliceIsEqual(elements, a.actual)
 	if !containsExactly {
-		a.failWithMessage("expected slice to contain exactly %#v, but got %#v", elements, a.actual)
+		a.FailWithMessage("expected slice to contain exactly %s, but got %s", elements, a.actual)
 	}
 	return a
 }
@@ -298,8 +274,8 @@ func (a *SliceAssert[E]) ContainsExactlyInAnyOrder(elements ...E) *SliceAssert[E
 	ok := true
 	if len(elements) == len(a.actual) {
 		for i := range elements {
-			numElements := SliceContainsEntryCount(elements, elements[i])
-			numActual := SliceContainsEntryCount(a.actual, elements[i])
+			numElements := check.SliceContainsEntryCount(elements, elements[i])
+			numActual := check.SliceContainsEntryCount(a.actual, elements[i])
 			if numElements != numActual {
 				ok = false
 				break
@@ -309,7 +285,7 @@ func (a *SliceAssert[E]) ContainsExactlyInAnyOrder(elements ...E) *SliceAssert[E
 		ok = false
 	}
 	if !ok {
-		a.failWithMessage("expected slice to contain exactly %v in any order, but got %#v", elements, a.actual)
+		a.FailWithMessage("expected slice to contain exactly %v in any order, but got %s", elements, a.actual)
 	}
 	return a
 }
@@ -330,8 +306,8 @@ func (a *SliceAssert[E]) ContainsSequence(sequence ...E) *SliceAssert[E] {
 	if h, ok := a.t.(tHelper); ok {
 		h.Helper()
 	}
-	if !SliceContainsSequence(a.actual, sequence) {
-		a.failWithMessage("expected slice to contain the sequence %#v, but got %#v", sequence, a.actual)
+	if !check.SliceContainsSequence(a.actual, sequence) {
+		a.FailWithMessage("expected slice to contain the sequence %s, but got %s", sequence, a.actual)
 	}
 	return a
 }
@@ -352,8 +328,8 @@ func (a *SliceAssert[E]) DoesNotContainSequence(sequence ...E) *SliceAssert[E] {
 	if h, ok := a.t.(tHelper); ok {
 		h.Helper()
 	}
-	if SliceContainsSequence(a.actual, sequence) {
-		a.failWithMessage("expected slice not to contain the sequence %#v, but got %#v", sequence, a.actual)
+	if check.SliceContainsSequence(a.actual, sequence) {
+		a.FailWithMessage("expected slice not to contain the sequence %s, but got %s", sequence, a.actual)
 	}
 	return a
 }
@@ -376,13 +352,13 @@ func (a *SliceAssert[E]) DoesNotContain(elements ...E) *SliceAssert[E] {
 	}
 	found := false
 	for i := range elements {
-		if SliceContainsEntry(a.actual, elements[i]) {
+		if check.SliceContainsEntry(a.actual, elements[i]) {
 			found = true
 			break
 		}
 	}
 	if found {
-		a.failWithMessage("expected slice not to contain %#v, but got %#v", elements, a.actual)
+		a.FailWithMessage("expected slice not to contain %s, but got %s", elements, a.actual)
 	}
 	return a
 }
@@ -419,13 +395,13 @@ func (a *SliceAssert[E]) ContainsAnyOf(elements ...E) *SliceAssert[E] {
 	}
 	found := false
 	for i := range elements {
-		if SliceContainsEntry(a.actual, elements[i]) {
+		if check.SliceContainsEntry(a.actual, elements[i]) {
 			found = true
 			break
 		}
 	}
 	if !found {
-		a.failWithMessage("expected slice to contain any of %#v, but got %#v", elements, a.actual)
+		a.FailWithMessage("expected slice to contain any of %s, but got %s", elements, a.actual)
 	}
 	return a
 }
@@ -442,14 +418,13 @@ func (a *SliceAssert[E]) ContainsAnyOf(elements ...E) *SliceAssert[E] {
 //	// assertion will fail
 //	assert.ThatSlice(t, []string{"a", "b", "cc"}).
 //	       HasAll(isSingleCharacter)
-func (a *SliceAssert[E]) HasAll(predicate Predicate[E]) *SliceAssert[E] {
+func (a *SliceAssert[E]) HasAll(predicate check.Predicate[E]) *SliceAssert[E] {
 	if h, ok := a.t.(tHelper); ok {
 		h.Helper()
 	}
-	if len(a.message) == 0 {
-		a.WithFailMessage("expected slice to have all entries match the predicate, but got %#v", a.actual)
+	if !check.SliceHasPrecicateMatches(a.actual, predicate, len(a.actual)) {
+		a.FailWithMessage("expected slice to have all entries match the predicate, but got %s", a.actual)
 	}
-	a.HasExactly(len(a.actual), predicate)
 	return a
 }
 
@@ -462,14 +437,13 @@ func (a *SliceAssert[E]) HasAll(predicate Predicate[E]) *SliceAssert[E] {
 //	// assertion will fail
 //	assert.ThatSlice(t, []string{"Gandalf", "Frodo", "Elrond"}).
 //	       HasNone(isHobbit)
-func (a *SliceAssert[E]) HasNone(predicate Predicate[E]) *SliceAssert[E] {
+func (a *SliceAssert[E]) HasNone(predicate check.Predicate[E]) *SliceAssert[E] {
 	if h, ok := a.t.(tHelper); ok {
 		h.Helper()
 	}
-	if len(a.message) == 0 {
-		a.WithFailMessage("expected slice to have no entry match the predicate, but got %#v", a.actual)
+	if !check.SliceHasPrecicateMatches(a.actual, predicate, 0) {
+		a.FailWithMessage("expected slice to have no entry match the predicate, but got %s", a.actual)
 	}
-	a.HasExactly(0, predicate)
 	return a
 }
 
@@ -482,14 +456,13 @@ func (a *SliceAssert[E]) HasNone(predicate Predicate[E]) *SliceAssert[E] {
 //	// assertion will fail
 //	assert.ThatSlice(t, []string{"Leia", "Han", "Lando"}).
 //	       HasAllMatch(isJedi)
-func (a *SliceAssert[E]) HasAny(predicate Predicate[E]) *SliceAssert[E] {
+func (a *SliceAssert[E]) HasAny(predicate check.Predicate[E]) *SliceAssert[E] {
 	if h, ok := a.t.(tHelper); ok {
 		h.Helper()
 	}
-	if len(a.message) == 0 {
-		a.WithFailMessage("expected slice to have any entry match the predicate, but got %#v", a.actual)
+	if check.SliceMatchPredicateCount(a.actual, predicate) == 0 {
+		a.FailWithMessage("expected slice to have any entry match the predicate, but got %s", a.actual)
 	}
-	a.HasAtLeast(1, predicate)
 	return a
 }
 
@@ -502,13 +475,12 @@ func (a *SliceAssert[E]) HasAny(predicate Predicate[E]) *SliceAssert[E] {
 //	// assertion will fail
 //	assert.ThatSlice(t, []int{1, 2, 3}).
 //	       HasAtLeast(3, isOddNumber)
-func (a *SliceAssert[E]) HasAtLeast(n int, predicate Predicate[E]) *SliceAssert[E] {
+func (a *SliceAssert[E]) HasAtLeast(n int, predicate check.Predicate[E]) *SliceAssert[E] {
 	if h, ok := a.t.(tHelper); ok {
 		h.Helper()
 	}
-	matches := SliceMatchPredicateCount(a.actual, predicate)
-	if matches < n {
-		a.failWithMessage("expected slice to have at least %d entries match the predicate, but got %#v", n, a.actual)
+	if check.SliceMatchPredicateCount(a.actual, predicate) < n {
+		a.FailWithMessage("expected slice to have at least %s entries match the predicate, but got %s", n, a.actual)
 	}
 	return a
 }
@@ -523,13 +495,12 @@ func (a *SliceAssert[E]) HasAtLeast(n int, predicate Predicate[E]) *SliceAssert[
 //	// assertion will fail
 //	assert.ThatSlice(t, []int{1, 2, 3}).
 //	       HasAtMost(1, isOddNumber)
-func (a *SliceAssert[E]) HasAtMost(n int, predicate Predicate[E]) *SliceAssert[E] {
+func (a *SliceAssert[E]) HasAtMost(n int, predicate check.Predicate[E]) *SliceAssert[E] {
 	if h, ok := a.t.(tHelper); ok {
 		h.Helper()
 	}
-	matches := SliceMatchPredicateCount(a.actual, predicate)
-	if matches > n {
-		a.failWithMessage("expected slice to have at most %d entries match the predicate, but got %#v", n, a.actual)
+	if check.SliceMatchPredicateCount(a.actual, predicate) > n {
+		a.FailWithMessage("expected slice to have at most %s entries match the predicate, but got %s", n, a.actual)
 	}
 	return a
 }
@@ -544,13 +515,12 @@ func (a *SliceAssert[E]) HasAtMost(n int, predicate Predicate[E]) *SliceAssert[E
 //	assert.ThatSlice(t, []int{1, 2, 3}).
 //	       HasAtMost(1, isOddNumber)
 //	       HasAtMost(3, isOddNumber)
-func (a *SliceAssert[E]) HasExactly(n int, predicate Predicate[E]) *SliceAssert[E] {
+func (a *SliceAssert[E]) HasExactly(n int, predicate check.Predicate[E]) *SliceAssert[E] {
 	if h, ok := a.t.(tHelper); ok {
 		h.Helper()
 	}
-	matches := SliceMatchPredicateCount(a.actual, predicate)
-	if matches != n {
-		a.failWithMessage("expected slice to have exactly %d entries match the predicate, but got %#v", n, a.actual)
+	if !check.SliceHasPrecicateMatches(a.actual, predicate, n) {
+		a.FailWithMessage("expected slice to have exactly %s entries match the predicate, but got %s", n, a.actual)
 	}
 	return a
 }
@@ -585,7 +555,7 @@ func (a *SliceAssert[E]) ExtractingStrings(extractor func(elem E) string) *Slice
 	for _, elem := range a.actual {
 		extracted = append(extracted, extractor(elem))
 	}
-	return &SliceAssert[string]{t: a.t, actual: extracted}
+	return ThatSlice(a.t, extracted)
 }
 
 // ExtractingInts extracts a new slice of ints from the actual slice using the given extractor function.
@@ -618,7 +588,7 @@ func (a *SliceAssert[E]) ExtractingInts(extractor func(elem E) int) *SliceAssert
 	for _, elem := range a.actual {
 		extracted = append(extracted, extractor(elem))
 	}
-	return &SliceAssert[int]{t: a.t, actual: extracted}
+	return ThatSlice(a.t, extracted)
 }
 
 // Extracting extracts a new slice from the actual slice using the given extractor function.
@@ -648,5 +618,5 @@ func (a *SliceAssert[E]) Extracting(extractor func(elem E) any) *SliceAssert[any
 	for _, elem := range a.actual {
 		extracted = append(extracted, extractor(elem))
 	}
-	return &SliceAssert[any]{t: a.t, actual: extracted}
+	return ThatSlice(a.t, extracted)
 }

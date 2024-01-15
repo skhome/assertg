@@ -8,1133 +8,586 @@ import (
 	"github.com/skhome/assertg/assert"
 )
 
-func TestStringDescription(t *testing.T) {
-	// given
-	// fixture := new(fixtureT)
-
-	// when
-	// assert := assert.ThatString(fixture, "foo").As("custom description for %s", "bar")
-
-	// then
-	// expected := "custom description for bar"
-	//if assert.description != expected {
-	//	t.Errorf("expected description to be %q, but got %q", expected, assert.description)
-	//}
+type stringTest struct {
+	value   string
+	other   string
+	others  []string
+	pattern string
+	re      *regexp.Regexp
+	num     int
+	ok      bool
 }
 
 func TestStringIsEmpty(t *testing.T) {
-	tests := []struct {
-		actual       string
-		expectedFail bool
-	}{
-		{actual: ""},
-		{actual: " ", expectedFail: true},
-		{actual: "Frodo", expectedFail: true},
+	tests := []stringTest{
+		{value: "", ok: true},
+		{value: " ", ok: false},
+		{value: "Frodo", ok: false},
 	}
-	messageFormat := "expected string to be empty, but got %q"
-
-	for _, test := range tests {
-		// given
-		fixture := new(fixtureT)
-
-		// when
-		assert.ThatString(fixture, test.actual).IsEmpty()
-
-		// then
-		if !test.expectedFail {
-			assertNoError(t, fixture)
-		} else {
-			assertErrorMessage(t, fixture, fmt.Sprintf(messageFormat, test.actual))
-		}
-	}
+	messageFormat := "expected string to be empty, but got <%s>"
+	runTests(t, tests)(func(fixture *fixtureT, test stringTest) (bool, string) {
+		assert.ThatString(fixture, test.value).IsEmpty()
+		return test.ok, fmt.Sprintf(messageFormat, test.value)
+	})
 }
 
 func TestStringIsNotEmpty(t *testing.T) {
-	tests := []struct {
-		actual       string
-		expectedFail bool
-	}{
-		{actual: "Frodo"},
-		{actual: " "},
-		{actual: "", expectedFail: true},
+	tests := []stringTest{
+		{value: "Frodo", ok: true},
+		{value: " ", ok: true},
+		{value: "", ok: false},
 	}
-	messageFormat := "expected string to not be empty, but got %q"
-
-	for _, test := range tests {
-		// given
-		fixture := new(fixtureT)
-
-		// when
-		assert.ThatString(fixture, test.actual).IsNotEmpty()
-
-		// then
-		if !test.expectedFail {
-			assertNoError(t, fixture)
-		} else {
-			assertErrorMessage(t, fixture, fmt.Sprintf(messageFormat, test.actual))
-		}
-	}
+	messageFormat := "expected string to not be empty, but got <%s>"
+	runTests(t, tests)(func(fixture *fixtureT, test stringTest) (bool, string) {
+		assert.ThatString(fixture, test.value).IsNotEmpty()
+		return test.ok, fmt.Sprintf(messageFormat, test.value)
+	})
 }
 
 func TestStringIsBlank(t *testing.T) {
-	tests := []struct {
-		actual       string
-		expectedFail bool
-	}{
-		{actual: ""},
-		{actual: " "},
-		{actual: "\t"},
-		{actual: " \t"},
-		{actual: "foo", expectedFail: true},
+	tests := []stringTest{
+		{value: "", ok: true},
+		{value: " ", ok: true},
+		{value: " \t", ok: true},
+		{value: "a", ok: false},
 	}
-	messageFormat := "expected string to be blank, but got %q"
-
-	for _, test := range tests {
-		// given
-		fixture := new(fixtureT)
-
-		// when
-		assert.ThatString(fixture, test.actual).IsBlank()
-
-		// then
-		if !test.expectedFail {
-			assertNoError(t, fixture)
-		} else {
-			assertErrorMessage(t, fixture, fmt.Sprintf(messageFormat, test.actual))
-		}
-	}
+	messageFormat := "expected string to be blank, but got <%s>"
+	runTests(t, tests)(func(fixture *fixtureT, test stringTest) (bool, string) {
+		assert.ThatString(fixture, test.value).IsBlank()
+		return test.ok, fmt.Sprintf(messageFormat, test.value)
+	})
 }
 
 func TestStringIsNotBlank(t *testing.T) {
-	tests := []struct {
-		actual       string
-		expectedFail bool
-	}{
-		{actual: "Frodo"},
-		{actual: "", expectedFail: true},
-		{actual: " ", expectedFail: true},
-		{actual: "\t", expectedFail: true},
+	tests := []stringTest{
+		{value: "a", ok: true},
+		{value: "", ok: false},
+		{value: " ", ok: false},
+		{value: "\t", ok: false},
 	}
-	messageFormat := "expected string to not be blank, but got %q"
-
-	for _, test := range tests {
-		// given
-		fixture := new(fixtureT)
-
-		// when
-		assert.ThatString(fixture, test.actual).IsNotBlank()
-
-		// then
-		if !test.expectedFail {
-			assertNoError(t, fixture)
-		} else {
-			assertErrorMessage(t, fixture, fmt.Sprintf(messageFormat, test.actual))
-		}
-	}
+	messageFormat := "expected string to not be blank, but got <%s>"
+	runTests(t, tests)(func(fixture *fixtureT, test stringTest) (bool, string) {
+		assert.ThatString(fixture, test.value).IsNotBlank()
+		return test.ok, fmt.Sprintf(messageFormat, test.value)
+	})
 }
 
 func TestStringContainsWhitespace(t *testing.T) {
-	tests := []struct {
-		actual       string
-		expectedFail bool
-	}{
-		{actual: " "},
-		{actual: "Frodo Baggins"},
-		{actual: "", expectedFail: true},
-		{actual: "Frodo", expectedFail: true},
+	tests := []stringTest{
+		{value: " ", ok: true},
+		{value: "Frodo Baggins", ok: true},
+		{value: "", ok: false},
+		{value: "Frodo", ok: false},
 	}
-	messageFormat := "expected string to contain whitespace characters, but got %q"
-
-	for _, test := range tests {
-		// given
-		fixture := new(fixtureT)
-
-		// when
-		assert.ThatString(fixture, test.actual).ContainsWhitespace()
-
-		// then
-		if !test.expectedFail {
-			assertNoError(t, fixture)
-		} else {
-			assertErrorMessage(t, fixture, fmt.Sprintf(messageFormat, test.actual))
-		}
-	}
+	messageFormat := "expected string to contain whitespace characters, but got <%s>"
+	runTests(t, tests)(func(fixture *fixtureT, test stringTest) (bool, string) {
+		assert.ThatString(fixture, test.value).ContainsWhitespace()
+		return test.ok, fmt.Sprintf(messageFormat, test.value)
+	})
 }
 
 func TestStringDoesNotContainWhitespace(t *testing.T) {
-	tests := []struct {
-		actual       string
-		expectedFail bool
-	}{
-		{actual: ""},
-		{actual: "Frodo"},
-		{actual: " ", expectedFail: true},
-		{actual: "Frodo Baggins", expectedFail: true},
+	tests := []stringTest{
+		{value: "", ok: true},
+		{value: "Frodo", ok: true},
+		{value: " ", ok: false},
+		{value: "Frodo Baggins", ok: false},
 	}
-	messageFormat := "expected string to not contain whitespace characters, but got %q"
-
-	for _, test := range tests {
-		// given
-		fixture := new(fixtureT)
-
-		// when
-		assert.ThatString(fixture, test.actual).DoesNotContainWhitespace()
-
-		// then
-		if !test.expectedFail {
-			assertNoError(t, fixture)
-		} else {
-			assertErrorMessage(t, fixture, fmt.Sprintf(messageFormat, test.actual))
-		}
-	}
-}
-
-func TestStringIsEqualTo(t *testing.T) {
-	tests := []struct {
-		actual       string
-		expected     string
-		expectedFail bool
-	}{
-		{actual: "foo", expected: "foo"},
-		{actual: "foo", expected: "bar", expectedFail: true},
-	}
-	messageFormat := "expected string to equal %q, but got %q"
-
-	for _, test := range tests {
-		// given
-		fixture := new(fixtureT)
-
-		// when
-		assert.ThatString(fixture, test.actual).IsEqualTo(test.expected)
-
-		// then
-		if !test.expectedFail {
-			assertNoError(t, fixture)
-		} else {
-			assertErrorMessage(t, fixture, fmt.Sprintf(messageFormat, test.expected, test.actual))
-		}
-	}
-}
-
-func TestStringIsNotEqualTo(t *testing.T) {
-	tests := []struct {
-		actual       string
-		expected     string
-		expectedFail bool
-	}{
-		{actual: "foo", expected: "bar"},
-		{actual: "foo", expected: "foo", expectedFail: true},
-	}
-	messageFormat := "expected string to not equal %q, but got %q"
-
-	for _, test := range tests {
-		// given
-		fixture := new(fixtureT)
-
-		// when
-		assert.ThatString(fixture, test.actual).IsNotEqualTo(test.expected)
-
-		// then
-		if !test.expectedFail {
-			assertNoError(t, fixture)
-		} else {
-			assertErrorMessage(t, fixture, fmt.Sprintf(messageFormat, test.expected, test.actual))
-		}
-	}
-}
-
-func TestStringIsEqualToIgnoringCase(t *testing.T) {
-	tests := []struct {
-		actual       string
-		expected     string
-		expectedFail bool
-	}{
-		{actual: "frodo", expected: "Frodo"},
-		{actual: "Frodo", expected: "frodo"},
-		{actual: "frodo", expected: "gandalf", expectedFail: true},
-	}
-	messageFormat := "expected string to equal %q ignoring case, but got %q"
-
-	for _, test := range tests {
-		// given
-		fixture := new(fixtureT)
-
-		// when
-		assert.ThatString(fixture, test.actual).IsEqualToIgnoringCase(test.expected)
-
-		// then
-		if !test.expectedFail {
-			assertNoError(t, fixture)
-		} else {
-			assertErrorMessage(t, fixture, fmt.Sprintf(messageFormat, test.expected, test.actual))
-		}
-	}
-}
-
-func TestStringIsNotEqualToIgnoringCase(t *testing.T) {
-	tests := []struct {
-		actual       string
-		expected     string
-		expectedFail bool
-	}{
-		{actual: "Gandalf", expected: "Hobbit"},
-		{actual: "Gandalf", expected: "gandalf", expectedFail: true},
-	}
-	messageFormat := "expected string to not equal %q ignoring case, but got %q"
-
-	for _, test := range tests {
-		// given
-		fixture := new(fixtureT)
-
-		// when
-		assert.ThatString(fixture, test.actual).IsNotEqualToIgnoringCase(test.expected)
-
-		// then
-		if !test.expectedFail {
-			assertNoError(t, fixture)
-		} else {
-			assertErrorMessage(t, fixture, fmt.Sprintf(messageFormat, test.expected, test.actual))
-		}
-	}
-}
-
-func TestStringContainsOnlyDigits(t *testing.T) {
-	tests := []struct {
-		actual       string
-		expectedFail bool
-	}{
-		{actual: "10"},
-		{actual: "10€", expectedFail: true},
-	}
-	messageFormat := "expected string to only contain digits, but got %q"
-
-	for _, test := range tests {
-		// given
-		fixture := new(fixtureT)
-
-		// when
-		assert.ThatString(fixture, test.actual).ContainsOnlyDigits()
-
-		// then
-		if !test.expectedFail {
-			assertNoError(t, fixture)
-		} else {
-			assertErrorMessage(t, fixture, fmt.Sprintf(messageFormat, test.actual))
-		}
-	}
-}
-
-func TestStringContainsOnlyOnce(t *testing.T) {
-	tests := []struct {
-		actual       string
-		substr       string
-		expectedFail bool
-	}{
-		{actual: "Frodo", substr: "do"},
-		{actual: "Frodo", substr: "o", expectedFail: true},
-		{actual: "Frodo", substr: "y", expectedFail: true},
-	}
-	messageFormat := "expected string to contain %q only once, but got %q"
-
-	for _, test := range tests {
-		// given
-		fixture := new(fixtureT)
-
-		// when
-		assert.ThatString(fixture, test.actual).ContainsOnlyOnce(test.substr)
-
-		// then
-		if !test.expectedFail {
-			assertNoError(t, fixture)
-		} else {
-			assertErrorMessage(t, fixture, fmt.Sprintf(messageFormat, test.substr, test.actual))
-		}
-	}
-}
-
-func TestStringIsIn(t *testing.T) {
-	tests := []struct {
-		actual       string
-		expected     []string
-		expectedFail bool
-	}{
-		{actual: "nenya", expected: []string{"nenya"}},
-		{actual: "nenya", expected: []string{"nenya", "nenya"}},
-		{actual: "nenya", expected: []string{"vilya", "nenya", "varya"}},
-		{actual: "one", expected: []string{}, expectedFail: true},
-		{actual: "one", expected: nil, expectedFail: true},
-		{actual: "one", expected: []string{"vilya", "nenya", "varya"}, expectedFail: true},
-	}
-	messageFormat := "expected string to be present in %#v, but got %q"
-
-	for _, test := range tests {
-		// given
-		fixture := new(fixtureT)
-
-		// when
-		assert.ThatString(fixture, test.actual).IsIn(test.expected)
-
-		// then
-		if !test.expectedFail {
-			assertNoError(t, fixture)
-		} else {
-			assertErrorMessage(t, fixture, fmt.Sprintf(messageFormat, test.expected, test.actual))
-		}
-	}
-}
-
-func TestStringIsNotIn(t *testing.T) {
-	tests := []struct {
-		actual       string
-		expected     []string
-		expectedFail bool
-	}{
-		{actual: "one", expected: []string{"vilya", "nenya", "varya"}},
-		{actual: "one", expected: []string{}},
-		{actual: "one", expected: nil},
-		{actual: "nenya", expected: []string{"nenya"}, expectedFail: true},
-		{actual: "nenya", expected: []string{"vilya", "nenya", "varya"}, expectedFail: true},
-	}
-	messageFormat := "expected string not to be present in %#v, but got %q"
-
-	for _, test := range tests {
-		// given
-		fixture := new(fixtureT)
-
-		// when
-		assert.ThatString(fixture, test.actual).IsNotIn(test.expected)
-
-		// then
-		if !test.expectedFail {
-			assertNoError(t, fixture)
-		} else {
-			assertErrorMessage(t, fixture, fmt.Sprintf(messageFormat, test.expected, test.actual))
-		}
-	}
-}
-
-func TestStringStartsWith(t *testing.T) {
-	tests := []struct {
-		actual       string
-		prefix       string
-		expectedFail bool
-	}{
-		{actual: "Frodo", prefix: "Fro"},
-		{actual: "Frodo", prefix: "Frodo"},
-		{actual: "Frodo", prefix: ""},
-		{actual: "Frodo", prefix: "fro", expectedFail: true},
-		{actual: "", prefix: "fro", expectedFail: true},
-	}
-	messageFormat := "expected string to start with %q, but got %q"
-
-	for _, test := range tests {
-		// given
-		fixture := new(fixtureT)
-
-		// when
-		assert.ThatString(fixture, test.actual).StartsWith(test.prefix)
-
-		// then
-		if !test.expectedFail {
-			assertNoError(t, fixture)
-		} else {
-			assertErrorMessage(t, fixture, fmt.Sprintf(messageFormat, test.prefix, test.actual))
-		}
-	}
-}
-
-func TestStringDoesNotStartWith(t *testing.T) {
-	tests := []struct {
-		actual       string
-		prefix       string
-		expectedFail bool
-	}{
-		{actual: "Frodo", prefix: "fro"},
-		{actual: "Frodo", prefix: "Sam"},
-		{actual: "Frodo", prefix: "", expectedFail: true},
-		{actual: "Frodo", prefix: "Fro", expectedFail: true},
-	}
-	messageFormat := "expected string to not start with %q, but got %q"
-
-	for _, test := range tests {
-		// given
-		fixture := new(fixtureT)
-
-		// when
-		assert.ThatString(fixture, test.actual).DoesNotStartWith(test.prefix)
-
-		// then
-		if !test.expectedFail {
-			assertNoError(t, fixture)
-		} else {
-			assertErrorMessage(t, fixture, fmt.Sprintf(messageFormat, test.prefix, test.actual))
-		}
-	}
-}
-
-func TestStringStartsWithIgnoringCase(t *testing.T) {
-	tests := []struct {
-		actual       string
-		prefix       string
-		expectedFail bool
-	}{
-		{actual: "Frodo", prefix: "Fro"},
-		{actual: "Frodo", prefix: "fro"},
-		{actual: "Frodo", prefix: "gan", expectedFail: true},
-	}
-	messageFormat := "expected string to start with %q ignoring case, but got %q"
-
-	for _, test := range tests {
-		// given
-		fixture := new(fixtureT)
-
-		// when
-		assert.ThatString(fixture, test.actual).StartsWithIgnoringCase(test.prefix)
-
-		// then
-		if !test.expectedFail {
-			assertNoError(t, fixture)
-		} else {
-			assertErrorMessage(t, fixture, fmt.Sprintf(messageFormat, test.prefix, test.actual))
-		}
-	}
-}
-
-func TestStringDoesNotStartWithIgnoringCase(t *testing.T) {
-	tests := []struct {
-		actual       string
-		prefix       string
-		expectedFail bool
-	}{
-		{actual: "Gandalf", prefix: "Fro"},
-		{actual: "Gandalf", prefix: "gan", expectedFail: true},
-	}
-	messageFormat := "expected string to not start with %q ignoring case, but got %q"
-
-	for _, test := range tests {
-		// given
-		fixture := new(fixtureT)
-
-		// when
-		assert.ThatString(fixture, test.actual).DoesNotStartWithIgnoringCase(test.prefix)
-
-		// then
-		if !test.expectedFail {
-			assertNoError(t, fixture)
-		} else {
-			assertErrorMessage(t, fixture, fmt.Sprintf(messageFormat, test.prefix, test.actual))
-		}
-	}
-}
-
-func TestStringEndsWith(t *testing.T) {
-	tests := []struct {
-		actual       string
-		suffix       string
-		expectedFail bool
-	}{
-		{actual: "foobar", suffix: "bar"},
-		{actual: "foo", suffix: "foo"},
-		{actual: "foo", suffix: ""},
-		{actual: "bar", suffix: "foo", expectedFail: true},
-		{actual: "", suffix: "f", expectedFail: true},
-	}
-	messageFormat := "expected string to end with %q, but got %q"
-
-	for _, test := range tests {
-		// given
-		fixture := new(fixtureT)
-
-		// when
-		assert.ThatString(fixture, test.actual).EndsWith(test.suffix)
-
-		// then
-		if !test.expectedFail {
-			assertNoError(t, fixture)
-		} else {
-			assertErrorMessage(t, fixture, fmt.Sprintf(messageFormat, test.suffix, test.actual))
-		}
-	}
-}
-
-func TestStringDoesNotEndWith(t *testing.T) {
-	tests := []struct {
-		actual       string
-		suffix       string
-		expectedFail bool
-	}{
-		{actual: "Frodo", suffix: "Fro"},
-		{actual: "Frodo", suffix: "do", expectedFail: true},
-	}
-	messageFormat := "expected string not to end with %q, but got %q"
-
-	for _, test := range tests {
-		// given
-		fixture := new(fixtureT)
-
-		// when
-		assert.ThatString(fixture, test.actual).DoesNotEndWith(test.suffix)
-
-		// then
-		if !test.expectedFail {
-			assertNoError(t, fixture)
-		} else {
-			assertErrorMessage(t, fixture, fmt.Sprintf(messageFormat, test.suffix, test.actual))
-		}
-	}
-}
-
-func TestStringEndsWithIgnoringCase(t *testing.T) {
-	tests := []struct {
-		actual       string
-		suffix       string
-		expectedFail bool
-	}{
-		{actual: "foobar", suffix: "bar"},
-		{actual: "FooBar", suffix: "bar"},
-		{actual: "bar", suffix: "foo", expectedFail: true},
-	}
-	messageFormat := "expected string to end with %q ignoring case, but got %q"
-
-	for _, test := range tests {
-		// given
-		fixture := new(fixtureT)
-
-		// when
-		assert.ThatString(fixture, test.actual).EndsWithIgnoringCase(test.suffix)
-
-		// then
-		if !test.expectedFail {
-			assertNoError(t, fixture)
-		} else {
-			assertErrorMessage(t, fixture, fmt.Sprintf(messageFormat, test.suffix, test.actual))
-		}
-	}
-}
-
-func TestStringDoesNotEndWithIgnoringCase(t *testing.T) {
-	tests := []struct {
-		actual       string
-		suffix       string
-		expectedFail bool
-	}{
-		{actual: "Frodo", suffix: "fro"},
-		{actual: "Frodo", suffix: "do", expectedFail: true},
-		{actual: "Frodo", suffix: "Do", expectedFail: true},
-	}
-	messageFormat := "expected string not to end with %q ignoring case, but got %q"
-
-	for _, test := range tests {
-		// given
-		fixture := new(fixtureT)
-
-		// when
-		assert.ThatString(fixture, test.actual).DoesNotEndWithIgnoringCase(test.suffix)
-
-		// then
-		if !test.expectedFail {
-			assertNoError(t, fixture)
-		} else {
-			assertErrorMessage(t, fixture, fmt.Sprintf(messageFormat, test.suffix, test.actual))
-		}
-	}
+	messageFormat := "expected string to not contain whitespace characters, but got <%s>"
+	runTests(t, tests)(func(fixture *fixtureT, test stringTest) (bool, string) {
+		assert.ThatString(fixture, test.value).DoesNotContainWhitespace()
+		return test.ok, fmt.Sprintf(messageFormat, test.value)
+	})
 }
 
 func TestStringHasLength(t *testing.T) {
-	tests := []struct {
-		actual       string
-		length       int
-		expectedFail bool
-	}{
-		{actual: "foo", length: 3},
-		{actual: "", length: 0},
-		{actual: "foo", length: 2, expectedFail: true},
+	tests := []stringTest{
+		{value: "Lord of the Rings", num: 17, ok: true},
+		{value: "", num: 0, ok: true},
+		{value: "foo", num: 2, ok: false},
 	}
-	messageFormat := "expected string to have length of %d, but got %q"
-
-	for _, test := range tests {
-		// given
-		fixture := new(fixtureT)
-
-		// when
-		assert.ThatString(fixture, test.actual).HasLength(test.length)
-
-		// then
-		if !test.expectedFail {
-			assertNoError(t, fixture)
-		} else {
-			assertErrorMessage(t, fixture, fmt.Sprintf(messageFormat, test.length, test.actual))
-		}
-	}
+	messageFormat := "expected string to have length of <%d>, but got <%s>"
+	runTests(t, tests)(func(fixture *fixtureT, test stringTest) (bool, string) {
+		assert.ThatString(fixture, test.value).HasLength(test.num)
+		return test.ok, fmt.Sprintf(messageFormat, test.num, test.value)
+	})
 }
 
 func TestStringHasLengthLessThan(t *testing.T) {
-	tests := []struct {
-		actual       string
-		length       int
-		expectedFail bool
-	}{
-		{actual: "foo", length: 4},
-		{actual: "", length: 1},
-		{actual: "foo", length: 2, expectedFail: true},
+	tests := []stringTest{
+		{value: "Frodo", num: 6, ok: true},
+		{value: "Frodo", num: 5, ok: false},
 	}
-	messageFormat := "expected string to have length less than %d, but got %q"
-
-	for _, test := range tests {
-		// given
-		fixture := new(fixtureT)
-
-		// when
-		assert.ThatString(fixture, test.actual).HasLengthLessThan(test.length)
-
-		// then
-		if !test.expectedFail {
-			assertNoError(t, fixture)
-		} else {
-			assertErrorMessage(t, fixture, fmt.Sprintf(messageFormat, test.length, test.actual))
-		}
-	}
+	messageFormat := "expected string to have length less than <%d>, but got <%s>"
+	runTests(t, tests)(func(fixture *fixtureT, test stringTest) (bool, string) {
+		assert.ThatString(fixture, test.value).HasLengthLessThan(test.num)
+		return test.ok, fmt.Sprintf(messageFormat, test.num, test.value)
+	})
 }
 
 func TestStringHasLengthGreaterThan(t *testing.T) {
-	tests := []struct {
-		actual       string
-		length       int
-		expectedFail bool
-	}{
-		{actual: "foo", length: 2},
-		{actual: "", length: 0, expectedFail: true},
-		{actual: "foo", length: 3, expectedFail: true},
+	tests := []stringTest{
+		{value: "Frodo", num: 4, ok: true},
+		{value: "Frodo", num: 5, ok: false},
 	}
-	messageFormat := "expected string to have length greater than %d, but got %q"
-
-	for _, test := range tests {
-		// given
-		fixture := new(fixtureT)
-
-		// when
-		assert.ThatString(fixture, test.actual).HasLengthGreaterThan(test.length)
-
-		// then
-		if !test.expectedFail {
-			assertNoError(t, fixture)
-		} else {
-			assertErrorMessage(t, fixture, fmt.Sprintf(messageFormat, test.length, test.actual))
-		}
-	}
+	messageFormat := "expected string to have length greater than <%d>, but got <%s>"
+	runTests(t, tests)(func(fixture *fixtureT, test stringTest) (bool, string) {
+		assert.ThatString(fixture, test.value).HasLengthGreaterThan(test.num)
+		return test.ok, fmt.Sprintf(messageFormat, test.num, test.value)
+	})
 }
 
 func TestStringHasSameLengthAs(t *testing.T) {
-	tests := []struct {
-		actual       string
-		other        string
-		expectedFail bool
-	}{
-		{actual: "foo", other: "bar"},
-		{actual: "", other: ""},
-		{actual: "foo", other: "bazy", expectedFail: true},
+	tests := []stringTest{
+		{value: "Gandalf", other: "Saruman", ok: true},
+		{value: "", other: "", ok: true},
+		{value: "Gandalf", other: "Frodo", ok: false},
 	}
-	messageFormat := "expected string to have the same length as %q (%d), but got %q (%d)"
-
-	for _, test := range tests {
-		// given
-		fixture := new(fixtureT)
-
-		// when
-		assert.ThatString(fixture, test.actual).HasSameLengthAs(test.other)
-
-		// then
-		if !test.expectedFail {
-			assertNoError(t, fixture)
-		} else {
-			assertErrorMessage(t, fixture, fmt.Sprintf(messageFormat, test.other, len(test.other), test.actual, len(test.actual)))
-		}
-	}
+	messageFormat := "expected string to have the same length as <%s>, but got <%s>"
+	runTests(t, tests)(func(fixture *fixtureT, test stringTest) (bool, string) {
+		assert.ThatString(fixture, test.value).HasSameLengthAs(test.other)
+		return test.ok, fmt.Sprintf(messageFormat, test.other, test.value)
+	})
 }
 
 func TestStringHasLineCount(t *testing.T) {
-	tests := []struct {
-		actual       string
-		lineCount    int
-		expectedFail bool
-	}{
-		{actual: "foo", lineCount: 1},
-		{actual: "", lineCount: 1},
-		{actual: "foo\nbar", lineCount: 2},
-		{actual: "foo\nbar\n", lineCount: 3},
-		{actual: "foo", lineCount: 2, expectedFail: true},
+	tests := []stringTest{
+		{value: "first", num: 1, ok: true},
+		{value: "", num: 1, ok: true},
+		{value: "first\nsecond", num: 2, ok: true},
+		{value: "first\nsecond\n", num: 3, ok: true},
+		{value: "first", num: 2, ok: false},
 	}
-	messageFormat := "expected string to have %d lines, but got %q"
+	messageFormat := "expected string to have <%d> lines, but got <%s>"
+	runTests(t, tests)(func(fixture *fixtureT, test stringTest) (bool, string) {
+		assert.ThatString(fixture, test.value).HasLineCount(test.num)
+		return test.ok, fmt.Sprintf(messageFormat, test.num, test.value)
+	})
+}
 
-	for _, test := range tests {
-		// given
-		fixture := new(fixtureT)
-
-		// when
-		assert.ThatString(fixture, test.actual).HasLineCount(test.lineCount)
-
-		// then
-		if !test.expectedFail {
-			assertNoError(t, fixture)
-		} else {
-			assertErrorMessage(t, fixture, fmt.Sprintf(messageFormat, test.lineCount, test.actual))
-		}
+func TestStringIsEqualTo(t *testing.T) {
+	tests := []stringTest{
+		{value: "Frodo", other: "Frodo", ok: true},
+		{value: "Frodo", other: "Sam", ok: false},
 	}
+	messageFormat := "expected string to equal <%s>, but got <%s>"
+	runTests(t, tests)(func(fixture *fixtureT, test stringTest) (bool, string) {
+		assert.ThatString(fixture, test.value).IsEqualTo(test.other)
+		return test.ok, fmt.Sprintf(messageFormat, test.other, test.value)
+	})
+}
+
+func TestStringIsNotEqualTo(t *testing.T) {
+	tests := []stringTest{
+		{value: "Frodo", other: "frodo", ok: true},
+		{value: "Frodo", other: "Frodo", ok: false},
+	}
+	messageFormat := "expected string not to equal <%s>, but got <%s>"
+	runTests(t, tests)(func(fixture *fixtureT, test stringTest) (bool, string) {
+		assert.ThatString(fixture, test.value).IsNotEqualTo(test.other)
+		return test.ok, fmt.Sprintf(messageFormat, test.other, test.value)
+	})
+}
+
+func TestStringIsEqualToIgnoringCase(t *testing.T) {
+	tests := []stringTest{
+		{value: "Frodo", other: "frodo", ok: true},
+		{value: "Frodo", other: "gandalf", ok: false},
+	}
+	messageFormat := "expected string to equal <%s> ignoring case, but got <%s>"
+	runTests(t, tests)(func(fixture *fixtureT, test stringTest) (bool, string) {
+		assert.ThatString(fixture, test.value).IsEqualToIgnoringCase(test.other)
+		return test.ok, fmt.Sprintf(messageFormat, test.other, test.value)
+	})
+}
+
+func TestStringIsNotEqualToIgnoringCase(t *testing.T) {
+	tests := []stringTest{
+		{value: "Frodo", other: "gandalf", ok: true},
+		{value: "Frodo", other: "frodo", ok: false},
+	}
+	messageFormat := "expected string to not equal <%s> ignoring case, but got <%s>"
+	runTests(t, tests)(func(fixture *fixtureT, test stringTest) (bool, string) {
+		assert.ThatString(fixture, test.value).IsNotEqualToIgnoringCase(test.other)
+		return test.ok, fmt.Sprintf(messageFormat, test.other, test.value)
+	})
+}
+
+func TestStringContainsDigit(t *testing.T) {
+	tests := []stringTest{
+		{value: "Bug8ear", ok: true},
+		{value: "V", ok: false},
+	}
+	messageFormat := "expected string to contain digit, but got <%s>"
+	runTests(t, tests)(func(fixture *fixtureT, test stringTest) (bool, string) {
+		assert.ThatString(fixture, test.value).ContainsDigit()
+		return test.ok, fmt.Sprintf(messageFormat, test.value)
+	})
+}
+
+func TestStringContainsOnlyDigits(t *testing.T) {
+	tests := []stringTest{
+		{value: "10", ok: true},
+		{value: "10a", ok: false},
+	}
+	messageFormat := "expected string to only contain digits, but got <%s>"
+	runTests(t, tests)(func(fixture *fixtureT, test stringTest) (bool, string) {
+		assert.ThatString(fixture, test.value).ContainsOnlyDigits()
+		return test.ok, fmt.Sprintf(messageFormat, test.value)
+	})
+}
+
+func TestStringContainsOnlyOnce(t *testing.T) {
+	tests := []stringTest{
+		{value: "Frodo", other: "do", ok: true},
+		{value: "Frodo", other: "o", ok: false},
+		{value: "Frodo", other: "y", ok: false},
+	}
+	messageFormat := "expected string to contain <%s> only once, but got <%s>"
+	runTests(t, tests)(func(fixture *fixtureT, test stringTest) (bool, string) {
+		assert.ThatString(fixture, test.value).ContainsOnlyOnce(test.other)
+		return test.ok, fmt.Sprintf(messageFormat, test.other, test.value)
+	})
 }
 
 func TestStringContains(t *testing.T) {
-	tests := []struct {
-		actual       string
-		value        string
-		expectedFail bool
-	}{
-		{actual: "foobar", value: "oba"},
-		{actual: "foobar", value: "foo"},
-		{actual: "foobar", value: ""},
-		{actual: "FooBar", value: "foo", expectedFail: true},
-		{actual: "", value: "foo", expectedFail: true},
+	tests := []stringTest{
+		{value: "Gandalf the grey", others: []string{"alf", "grey"}, ok: true},
+		{value: "Gandalf the grey", others: []string{"white"}, ok: false},
 	}
-	messageFormat := "expected string to contain %q, but got %q"
-
-	for _, test := range tests {
-		// given
-		fixture := new(fixtureT)
-
-		// when
-		assert.ThatString(fixture, test.actual).Contains(test.value)
-
-		// then
-		if !test.expectedFail {
-			assertNoError(t, fixture)
-		} else {
-			assertErrorMessage(t, fixture, fmt.Sprintf(messageFormat, test.value, test.actual))
-		}
-	}
-}
-
-func TestStringContainsIgnoringCase(t *testing.T) {
-	tests := []struct {
-		actual       string
-		substr       string
-		expectedFail bool
-	}{
-		{actual: "Gandalf the grey", substr: "gandalf"},
-		{actual: "Gandalf the grey", substr: "white", expectedFail: true},
-	}
-	messageFormat := "expected string to contain %q ignoring case, but got %q"
-
-	for _, test := range tests {
-		// given
-		fixture := new(fixtureT)
-
-		// when
-		assert.ThatString(fixture, test.actual).ContainsIgnoringCase(test.substr)
-
-		// then
-		if !test.expectedFail {
-			assertNoError(t, fixture)
-		} else {
-			assertErrorMessage(t, fixture, fmt.Sprintf(messageFormat, test.substr, test.actual))
-		}
-	}
-}
-
-func TestStringContainsIgnoringWhitespace(t *testing.T) {
-	tests := []struct {
-		actual       string
-		substr       string
-		expectedFail bool
-	}{
-		{actual: "Gandalf the grey", substr: "thegrey"},
-		{actual: "Gandalf the grey", substr: "thegr ey"},
-		{actual: "Gandalf the grey", substr: "Grey", expectedFail: true},
-	}
-	messageFormat := "expected string to contain %q ignoring whitespace, but got %q"
-
-	for _, test := range tests {
-		// given
-		fixture := new(fixtureT)
-
-		// when
-		assert.ThatString(fixture, test.actual).ContainsIgnoringWhitespace(test.substr)
-
-		// then
-		if !test.expectedFail {
-			assertNoError(t, fixture)
-		} else {
-			assertErrorMessage(t, fixture, fmt.Sprintf(messageFormat, test.substr, test.actual))
-		}
-	}
-}
-
-func TestStringContainAllOf(t *testing.T) {
-	tests := []struct {
-		actual       string
-		values       []string
-		expectedFail bool
-	}{
-		{actual: "foobar", values: []string{"foo", "bar"}},
-		{actual: "FooBar", values: []string{"foo"}, expectedFail: true},
-		{actual: "foobar", values: []string{"foo", "baz"}, expectedFail: true},
-	}
-	messageFormat := "expected string to contain all of %#v, but got %q"
-
-	for _, test := range tests {
-		// given
-		fixture := new(fixtureT)
-
-		// when
-		assert.ThatString(fixture, test.actual).ContainsAllOf(test.values...)
-
-		// then
-		if !test.expectedFail {
-			assertNoError(t, fixture)
-		} else {
-			assertErrorMessage(t, fixture, fmt.Sprintf(messageFormat, test.values, test.actual))
-		}
-	}
+	messageFormat := "expected string to contain <%s>, but got <%s>"
+	runTests(t, tests)(func(fixture *fixtureT, test stringTest) (bool, string) {
+		assert.ThatString(fixture, test.value).Contains(test.others...)
+		return test.ok, fmt.Sprintf(messageFormat, test.others, test.value)
+	})
 }
 
 func TestStringContainsAnyOf(t *testing.T) {
-	tests := []struct {
-		actual       string
-		values       []string
-		expectedFail bool
-	}{
-		{actual: "foobar", values: []string{"foo", "bar"}},
-		{actual: "foobar", values: []string{"foo", "baz"}},
-		{actual: "FooBar", values: []string{"foo"}, expectedFail: true},
+	tests := []stringTest{
+		{value: "Gandalf the grey", others: []string{"grey", "black"}, ok: true},
+		{value: "Gandalf the grey", others: []string{"white", "black"}, ok: false},
 	}
-	messageFormat := "expected string to contain any of %#v, but got %q"
+	messageFormat := "expected string to contain any of <%s>, but got <%s>"
+	runTests(t, tests)(func(fixture *fixtureT, test stringTest) (bool, string) {
+		assert.ThatString(fixture, test.value).ContainsAnyOf(test.others...)
+		return test.ok, fmt.Sprintf(messageFormat, test.others, test.value)
+	})
+}
 
-	for _, test := range tests {
-		// given
-		fixture := new(fixtureT)
-
-		// when
-		assert.ThatString(fixture, test.actual).ContainsAnyOf(test.values...)
-
-		// then
-		if !test.expectedFail {
-			assertNoError(t, fixture)
-		} else {
-			assertErrorMessage(t, fixture, fmt.Sprintf(messageFormat, test.values, test.actual))
-		}
+func TestStringContainsIgnoringCase(t *testing.T) {
+	tests := []stringTest{
+		{value: "Gandalf the grey", others: []string{"gandalf", "Grey"}, ok: true},
+		{value: "Gandalf the grey", others: []string{"white"}, ok: false},
 	}
+	messageFormat := "expected string to contain <%s> ignoring case, but got <%s>"
+	runTests(t, tests)(func(fixture *fixtureT, test stringTest) (bool, string) {
+		assert.ThatString(fixture, test.value).ContainsIgnoringCase(test.others...)
+		return test.ok, fmt.Sprintf(messageFormat, test.others, test.value)
+	})
+}
+
+func TestStringContainsIgnoringWhitespace(t *testing.T) {
+	tests := []stringTest{
+		{value: "Gandalf the grey", others: []string{"alf"}, ok: true},
+		{value: "Gandalf the grey", others: []string{"alf", "grey"}, ok: true},
+		{value: "Gandalf the grey", others: []string{"thegrey"}, ok: true},
+		{value: "Gandalf the grey", others: []string{"thegr  ey"}, ok: true},
+		{value: "Gandalf the grey", others: []string{"t h e\t grey"}, ok: true},
+		{value: "Gandalf the grey", others: []string{"alF"}, ok: false},
+	}
+	messageFormat := "expected string to contain <%s> ignoring whitespace, but got <%s>"
+	runTests(t, tests)(func(fixture *fixtureT, test stringTest) (bool, string) {
+		assert.ThatString(fixture, test.value).ContainsIgnoringWhitespace(test.others...)
+		return test.ok, fmt.Sprintf(messageFormat, test.others, test.value)
+	})
 }
 
 func TestStringDoesNotContain(t *testing.T) {
-	tests := []struct {
-		actual       string
-		substr       string
-		expectedFail bool
-	}{
-		{actual: "Frodo", substr: "Pippin"},
-		{actual: "Frodo", substr: "do", expectedFail: true},
+	tests := []stringTest{
+		{value: "Frodo", others: []string{"pippin"}, ok: true},
+		{value: "Frodo", others: []string{"fro", "sam"}, ok: true},
+		{value: "Frodo", others: []string{"Fro", "Gimli"}, ok: false},
 	}
-	messageFormat := "expected string to not contain %q, but got %q"
-
-	for _, test := range tests {
-		// given
-		fixture := new(fixtureT)
-
-		// when
-		assert.ThatString(fixture, test.actual).DoesNotContain(test.substr)
-
-		// then
-		if !test.expectedFail {
-			assertNoError(t, fixture)
-		} else {
-			assertErrorMessage(t, fixture, fmt.Sprintf(messageFormat, test.substr, test.actual))
-		}
-	}
+	messageFormat := "expected string to not contain <%s>, but got <%s>"
+	runTests(t, tests)(func(fixture *fixtureT, test stringTest) (bool, string) {
+		assert.ThatString(fixture, test.value).DoesNotContain(test.others...)
+		return test.ok, fmt.Sprintf(messageFormat, test.others, test.value)
+	})
 }
 
 func TestStringDoesNotContainIgnoringCase(t *testing.T) {
-	tests := []struct {
-		actual       string
-		substr       string
-		expectedFail bool
-	}{
-		{actual: "Frodo", substr: "sam"},
-		{actual: "Frodo", substr: "fro", expectedFail: true},
+	tests := []stringTest{
+		{value: "Frodo", others: []string{"pippin"}, ok: true},
+		{value: "Frodo", others: []string{"Merry", "sam"}, ok: true},
+		{value: "Frodo", others: []string{"Fro", "Gimli"}, ok: false},
+		{value: "Frodo", others: []string{"fro"}, ok: false},
 	}
-	messageFormat := "expected string to not contain %q ignoring case, but got %q"
-
-	for _, test := range tests {
-		// given
-		fixture := new(fixtureT)
-
-		// when
-		assert.ThatString(fixture, test.actual).DoesNotContainIgnoringCase(test.substr)
-
-		// then
-		if !test.expectedFail {
-			assertNoError(t, fixture)
-		} else {
-			assertErrorMessage(t, fixture, fmt.Sprintf(messageFormat, test.substr, test.actual))
-		}
-	}
+	messageFormat := "expected string to not contain <%s> ignoring case, but got <%s>"
+	runTests(t, tests)(func(fixture *fixtureT, test stringTest) (bool, string) {
+		assert.ThatString(fixture, test.value).DoesNotContainIgnoringCase(test.others...)
+		return test.ok, fmt.Sprintf(messageFormat, test.others, test.value)
+	})
 }
 
 func TestStringDoesNotContainIgnoringWhitespace(t *testing.T) {
-	tests := []struct {
-		actual       string
-		substr       string
-		expectedFail bool
-	}{
-		{actual: "Gandalf the grey", substr: "TheGrey"},
-		{actual: "Gandalf the grey", substr: "thegrey", expectedFail: true},
+	tests := []stringTest{
+		{value: "Gandalf the grey", others: []string{"TheGrey"}, ok: true},
+		{value: "Gandalf the grey", others: []string{"thegrey"}, ok: false},
 	}
-	messageFormat := "expected string to not contain %q ignoring whitespace, but got %q"
-
-	for _, test := range tests {
-		// given
-		fixture := new(fixtureT)
-
-		// when
-		assert.ThatString(fixture, test.actual).DoesNotContainIgnoringWhitespace(test.substr)
-
-		// then
-		if !test.expectedFail {
-			assertNoError(t, fixture)
-		} else {
-			assertErrorMessage(t, fixture, fmt.Sprintf(messageFormat, test.substr, test.actual))
-		}
-	}
+	messageFormat := "expected string to not contain <%s> ignoring whitespace, but got <%s>"
+	runTests(t, tests)(func(fixture *fixtureT, test stringTest) (bool, string) {
+		assert.ThatString(fixture, test.value).DoesNotContainIgnoringWhitespace(test.others...)
+		return test.ok, fmt.Sprintf(messageFormat, test.others, test.value)
+	})
 }
 
-func TestStringMatches(t *testing.T) {
-	tests := []struct {
-		actual       string
-		pattern      string
-		expectedFail bool
-	}{
-		{actual: "Frodo", pattern: `..o.o`},
-		{actual: "Frodo", pattern: `.*f`, expectedFail: true},
+func TestStringStartsWith(t *testing.T) {
+	tests := []stringTest{
+		{value: "Frodo", other: "Fro", ok: true},
+		{value: "Frodo", other: "fro", ok: false},
 	}
-	messageFormat := "expected string to match %q, but got %q"
-
-	for _, test := range tests {
-		// given
-		fixture := new(fixtureT)
-
-		// when
-		assert.ThatString(fixture, test.actual).Matches(test.pattern)
-
-		// then
-		if !test.expectedFail {
-			assertNoError(t, fixture)
-		} else {
-			assertErrorMessage(t, fixture, fmt.Sprintf(messageFormat, test.pattern, test.actual))
-		}
-	}
+	messageFormat := "expected string to start with <%s>, but got <%s>"
+	runTests(t, tests)(func(fixture *fixtureT, test stringTest) (bool, string) {
+		assert.ThatString(fixture, test.value).StartsWith(test.other)
+		return test.ok, fmt.Sprintf(messageFormat, test.other, test.value)
+	})
 }
 
-func TestStringDoesNotMatch(t *testing.T) {
-	tests := []struct {
-		actual       string
-		pattern      string
-		expectedFail bool
-	}{
-		{actual: "Frodo", pattern: `.*d$`},
-		{actual: "Frodo", pattern: `F.*`, expectedFail: true},
+func TestStringDoesNotStartWith(t *testing.T) {
+	tests := []stringTest{
+		{value: "Frodo", other: "fro", ok: true},
+		{value: "Frodo", other: "Fro", ok: false},
 	}
-	messageFormat := "expected string not to match %q, but got %q"
+	messageFormat := "expected string not to start with <%s>, but got <%s>"
+	runTests(t, tests)(func(fixture *fixtureT, test stringTest) (bool, string) {
+		assert.ThatString(fixture, test.value).DoesNotStartWith(test.other)
+		return test.ok, fmt.Sprintf(messageFormat, test.other, test.value)
+	})
+}
 
-	for _, test := range tests {
-		// given
-		fixture := new(fixtureT)
-
-		// when
-		assert.ThatString(fixture, test.actual).DoesNotMatch(test.pattern)
-
-		// then
-		if !test.expectedFail {
-			assertNoError(t, fixture)
-		} else {
-			assertErrorMessage(t, fixture, fmt.Sprintf(messageFormat, test.pattern, test.actual))
-		}
+func TestStringStartsWithIgnoringCase(t *testing.T) {
+	tests := []stringTest{
+		{value: "Gandalf the grey", other: "Gandalf", ok: true},
+		{value: "Gandalf the grey", other: "gandalf", ok: true},
+		{value: "Gandald the grey", other: "grey", ok: false},
 	}
+	messageFormat := "expected string to start with <%s> ignoring case, but got <%s>"
+	runTests(t, tests)(func(fixture *fixtureT, test stringTest) (bool, string) {
+		assert.ThatString(fixture, test.value).StartsWithIgnoringCase(test.other)
+		return test.ok, fmt.Sprintf(messageFormat, test.other, test.value)
+	})
+}
+
+func TestStringDoesNotStartWithIgnoringCase(t *testing.T) {
+	tests := []stringTest{
+		{value: "Gandalf the grey", other: "fro", ok: true},
+		{value: "Gandalf the grey", other: "grey", ok: true},
+		{value: "Gandalf the grey", other: "Gandalf", ok: false},
+		{value: "Gandalf the grey", other: "gandalf", ok: false},
+	}
+	messageFormat := "expected string not to start with <%s> ignoring case, but got <%s>"
+	runTests(t, tests)(func(fixture *fixtureT, test stringTest) (bool, string) {
+		assert.ThatString(fixture, test.value).DoesNotStartWithIgnoringCase(test.other)
+		return test.ok, fmt.Sprintf(messageFormat, test.other, test.value)
+	})
+}
+
+func TestStringEndsWith(t *testing.T) {
+	tests := []stringTest{
+		{value: "Frodo", other: "do", ok: true},
+		{value: "Frodo", other: "Fro", ok: false},
+	}
+	messageFormat := "expected string to end with <%s>, but got <%s>"
+	runTests(t, tests)(func(fixture *fixtureT, test stringTest) (bool, string) {
+		assert.ThatString(fixture, test.value).EndsWith(test.other)
+		return test.ok, fmt.Sprintf(messageFormat, test.other, test.value)
+	})
+}
+
+func TestStringDoesNotEndWith(t *testing.T) {
+	tests := []stringTest{
+		{value: "Frodo", other: "Fro", ok: true},
+		{value: "Frodo", other: "do", ok: false},
+		{value: "Frodo", other: "", ok: false},
+	}
+	messageFormat := "expected string not to end with <%s>, but got <%s>"
+	runTests(t, tests)(func(fixture *fixtureT, test stringTest) (bool, string) {
+		assert.ThatString(fixture, test.value).DoesNotEndWith(test.other)
+		return test.ok, fmt.Sprintf(messageFormat, test.other, test.value)
+	})
+}
+
+func TestStringEndsWithIgnoringCase(t *testing.T) {
+	tests := []stringTest{
+		{value: "Frodo", other: "do", ok: true},
+		{value: "Frodo", other: "Do", ok: true},
+		{value: "Frodo", other: "fro", ok: false},
+	}
+	messageFormat := "expected string to end with <%s> ignoring case, but got <%s>"
+	runTests(t, tests)(func(fixture *fixtureT, test stringTest) (bool, string) {
+		assert.ThatString(fixture, test.value).EndsWithIgnoringCase(test.other)
+		return test.ok, fmt.Sprintf(messageFormat, test.other, test.value)
+	})
+}
+
+func TestStringDoesNotEndWithIgnoringCase(t *testing.T) {
+	tests := []stringTest{
+		{value: "Frodo", other: "Fro", ok: true},
+		{value: "Frodo", other: "do", ok: false},
+		{value: "Frodo", other: "DO", ok: false},
+	}
+	messageFormat := "expected string not to end with <%s> ignoring case, but got <%s>"
+	runTests(t, tests)(func(fixture *fixtureT, test stringTest) (bool, string) {
+		assert.ThatString(fixture, test.value).DoesNotEndWithIgnoringCase(test.other)
+		return test.ok, fmt.Sprintf(messageFormat, test.other, test.value)
+	})
+}
+
+func TestStringMatchesPattern(t *testing.T) {
+	tests := []stringTest{
+		{value: "Frodo", pattern: `..o.o`, ok: true},
+		{value: "Frodo", pattern: `.*d$`, ok: false},
+	}
+	messageFormat := "expected string to match <%s>, but got <%s>"
+	runTests(t, tests)(func(fixture *fixtureT, test stringTest) (bool, string) {
+		assert.ThatString(fixture, test.value).MatchesPattern(test.pattern)
+		return test.ok, fmt.Sprintf(messageFormat, test.pattern, test.value)
+	})
+}
+
+func TestStringDoesNotMatchPattern(t *testing.T) {
+	tests := []stringTest{
+		{value: "Frodo", pattern: `.*d$`, ok: true},
+		{value: "Frodo", pattern: `..o.o`, ok: false},
+	}
+	messageFormat := "expected string not to match <%s>, but got <%s>"
+	runTests(t, tests)(func(fixture *fixtureT, test stringTest) (bool, string) {
+		assert.ThatString(fixture, test.value).DoesNotMatchPattern(test.pattern)
+		return test.ok, fmt.Sprintf(messageFormat, test.pattern, test.value)
+	})
 }
 
 func TestStringMatchesRegexp(t *testing.T) {
-	tests := []struct {
-		actual       string
-		regex        *regexp.Regexp
-		expectedFail bool
-	}{
-		{actual: "Frodo", regex: regexp.MustCompile(`..o.o`)},
-		{actual: "Frodo", regex: regexp.MustCompile(`.*f`), expectedFail: true},
+	tests := []stringTest{
+		{value: "Frodo", re: regexp.MustCompile(`..o.o`), ok: true},
+		{value: "Frodo", re: regexp.MustCompile(`.*d$`), ok: false},
 	}
-	messageFormat := "expected string to match \"%v\", but got %q"
-
-	for _, test := range tests {
-		// given
-		fixture := new(fixtureT)
-
-		// when
-		assert.ThatString(fixture, test.actual).MatchesRegexp(test.regex)
-
-		// then
-		if !test.expectedFail {
-			assertNoError(t, fixture)
-		} else {
-			assertErrorMessage(t, fixture, fmt.Sprintf(messageFormat, test.regex, test.actual))
-		}
-	}
+	messageFormat := "expected string to match <%s>, but got <%s>"
+	runTests(t, tests)(func(fixture *fixtureT, test stringTest) (bool, string) {
+		assert.ThatString(fixture, test.value).MatchesRegexp(test.re)
+		return test.ok, fmt.Sprintf(messageFormat, test.re, test.value)
+	})
 }
 
 func TestStringDoesNotMatchRegexp(t *testing.T) {
-	tests := []struct {
-		actual       string
-		regex        *regexp.Regexp
-		expectedFail bool
-	}{
-		{actual: "Frodo", regex: regexp.MustCompile(`.*f`)},
-		{actual: "Frodo", regex: regexp.MustCompile(`..o.o`), expectedFail: true},
+	tests := []stringTest{
+		{value: "Frodo", re: regexp.MustCompile(`.*d$`), ok: true},
+		{value: "Frodo", re: regexp.MustCompile(`..o.o`), ok: false},
 	}
-	messageFormat := "expected string to match \"%v\", but got %q"
+	messageFormat := "expected string to match <%s>, but got <%s>"
+	runTests(t, tests)(func(fixture *fixtureT, test stringTest) (bool, string) {
+		assert.ThatString(fixture, test.value).DoesNotMatchRegexp(test.re)
+		return test.ok, fmt.Sprintf(messageFormat, test.re, test.value)
+	})
+}
 
-	for _, test := range tests {
-		// given
-		fixture := new(fixtureT)
-
-		// when
-		assert.ThatString(fixture, test.actual).DoesNotMatchRegexp(test.regex)
-
-		// then
-		if !test.expectedFail {
-			assertNoError(t, fixture)
-		} else {
-			assertErrorMessage(t, fixture, fmt.Sprintf(messageFormat, test.regex, test.actual))
-		}
+func TestStringIsEqualToIgnoringWhitespace(t *testing.T) {
+	tests := []stringTest{
+		{value: "Game of Thrones", other: "Game   of   Thrones", ok: true},
+		{value: "Game of Thrones", other: "  Game of   Thrones  ", ok: true},
+		{value: "Game of Thrones", other: "  Game of Thrones  ", ok: true},
+		{value: "Game of Thrones", other: "\tGame of Thrones\n", ok: true},
+		{value: "Game of Thrones", other: "Game OF Thrones", ok: false},
 	}
+	messageFormat := "expected string to equal ignoring whitespace <%s>, but got <%s>"
+	runTests(t, tests)(func(fixture *fixtureT, test stringTest) (bool, string) {
+		assert.ThatString(fixture, test.value).IsEqualToIgnoringWhitespace(test.other)
+		return test.ok, fmt.Sprintf(messageFormat, test.other, test.value)
+	})
+}
+
+func TestStringIsNotEqualToIgnoringWhitespace(t *testing.T) {
+	tests := []stringTest{
+		{value: "Game of Thrones", other: "Game OF Thrones", ok: true},
+		{value: "Game of Thrones", other: "Game   of   Thrones", ok: false},
+		{value: "Game of Thrones", other: "  Game of   Thrones  ", ok: false},
+		{value: "Game of Thrones", other: "  Game of Thrones  ", ok: false},
+		{value: "Game of Thrones", other: "\tGame of Thrones\n", ok: false},
+	}
+	messageFormat := "expected string not to equal ignoring whitespace <%s>, but got <%s>"
+	runTests(t, tests)(func(fixture *fixtureT, test stringTest) (bool, string) {
+		assert.ThatString(fixture, test.value).IsNotEqualToIgnoringWhitespace(test.other)
+		return test.ok, fmt.Sprintf(messageFormat, test.other, test.value)
+	})
 }
 
 func TestStringIsSubstringOf(t *testing.T) {
-	tests := []struct {
-		actual       string
-		str          string
-		expectedFail bool
-	}{
-		{actual: "Lego", str: "Legolas"},
-		{actual: "Frodo", str: "Fro", expectedFail: true},
+	tests := []stringTest{
+		{value: "Lego", other: "Legolas", ok: true},
+		{value: "Lego", other: "Lego", ok: true},
+		{value: "Frodo", other: "Frod", ok: false},
 	}
-	messageFormat := "expected string to be a substring of %q, but got %q"
+	messageFormat := "expected string to be a substring of <%s>, but got <%s>"
+	runTests(t, tests)(func(fixture *fixtureT, test stringTest) (bool, string) {
+		assert.ThatString(fixture, test.value).IsSubstringOf(test.other)
+		return test.ok, fmt.Sprintf(messageFormat, test.other, test.value)
+	})
+}
 
-	for _, test := range tests {
-		// given
-		fixture := new(fixtureT)
-
-		// when
-		assert.ThatString(fixture, test.actual).IsSubstringOf(test.str)
-
-		// then
-		if !test.expectedFail {
-			assertNoError(t, fixture)
-		} else {
-			assertErrorMessage(t, fixture, fmt.Sprintf(messageFormat, test.str, test.actual))
-		}
+func TestStringIsIn(t *testing.T) {
+	hobbits := []string{"Frodo", "Sam", "Merry", "Pippin", "Bilbo"}
+	tests := []stringTest{
+		{value: "Frodo", others: hobbits, ok: true},
+		{value: "Legolas", others: hobbits, ok: false},
+		{value: "Legolas", others: nil, ok: false},
 	}
+	messageFormat := "expected string to be present in <%s>, but got <%s>"
+	runTests(t, tests)(func(fixture *fixtureT, test stringTest) (bool, string) {
+		assert.ThatString(fixture, test.value).IsIn(test.others)
+		return test.ok, fmt.Sprintf(messageFormat, test.others, test.value)
+	})
+}
+
+func TestStringIsNotIn(t *testing.T) {
+	hobbits := []string{"Frodo", "Sam", "Merry", "Pippin", "Bilbo"}
+	tests := []stringTest{
+		{value: "Legolas", others: hobbits, ok: true},
+		{value: "Frodo", others: nil, ok: true},
+		{value: "Frodo", others: hobbits, ok: false},
+	}
+	messageFormat := "expected string not to be present in <%s>, but got <%s>"
+	runTests(t, tests)(func(fixture *fixtureT, test stringTest) (bool, string) {
+		assert.ThatString(fixture, test.value).IsNotIn(test.others)
+		return test.ok, fmt.Sprintf(messageFormat, test.others, test.value)
+	})
+}
+
+func TestStringLowerCase(t *testing.T) {
+	tests := []stringTest{
+		{value: "legolas", ok: true},
+		{value: "", ok: true},
+		{value: ".", ok: true},
+		{value: "42", ok: true},
+		{value: "Legolas", ok: false},
+	}
+	messageFormat := "expected string to be all lower case, but got <%s>"
+	runTests(t, tests)(func(fixture *fixtureT, test stringTest) (bool, string) {
+		assert.ThatString(fixture, test.value).IsLowerCase()
+		return test.ok, fmt.Sprintf(messageFormat, test.value)
+	})
+}
+
+func TestStringUpperCase(t *testing.T) {
+	tests := []stringTest{
+		{value: "LEGOLAS", ok: true},
+		{value: "", ok: true},
+		{value: ".", ok: true},
+		{value: "42", ok: true},
+		{value: "Legolas", ok: false},
+	}
+	messageFormat := "expected string to be all upper case, but got <%s>"
+	runTests(t, tests)(func(fixture *fixtureT, test stringTest) (bool, string) {
+		assert.ThatString(fixture, test.value).IsUpperCase()
+		return test.ok, fmt.Sprintf(messageFormat, test.value)
+	})
 }

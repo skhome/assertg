@@ -1,4 +1,19 @@
-package assert
+package check
+
+// SliceHasSize returns if the slice has the given size.
+func SliceHasSize[T ~[]E, E any](slice T, size int) bool {
+	return len(slice) == size
+}
+
+// SliceHasSizeGreaterThan returns if the slice has a size greater then the given value.
+func SliceHasSizeGreaterThan[T ~[]E, E any](slice T, size int) bool {
+	return len(slice) > size
+}
+
+// SliceHasSizeLessThan returns if the slice has a size less then the given value.
+func SliceHasSizeLessThan[T ~[]E, E any](slice T, size int) bool {
+	return len(slice) < size
+}
 
 // SliceIsEqual returns if the given slices are equal.
 func SliceIsEqual[T ~[]E, E any](a T, b T) bool {
@@ -53,6 +68,7 @@ func SliceContainsSequence[T ~[]E, E any](slice T, sequence T) bool {
 	return false
 }
 
+// SliceMatchPredicateCount returns how many elements in slice match the given predicate.
 func SliceMatchPredicateCount[T ~[]E, E any](slice T, predicate Predicate[E]) int {
 	matches := 0
 	for i := range slice {
@@ -61,4 +77,9 @@ func SliceMatchPredicateCount[T ~[]E, E any](slice T, predicate Predicate[E]) in
 		}
 	}
 	return matches
+}
+
+// SliceHasPrecicateMatches returns if the slice has the given number of elements that match the predicate.
+func SliceHasPrecicateMatches[T ~[]E, E any](slice T, predicate Predicate[E], times int) bool {
+	return SliceMatchPredicateCount(slice, predicate) == times
 }
