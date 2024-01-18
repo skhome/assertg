@@ -7,6 +7,9 @@ type Representation func(value any) string
 
 // Returns the default representation of a given value.
 func DefaultRepresentation(value any) string {
+	if value == nil {
+		return fmt.Sprintf("%v", value)
+	}
 	return fmt.Sprintf("<%v>", value)
 }
 

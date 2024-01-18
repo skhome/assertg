@@ -48,8 +48,12 @@ func (i *WritableAssertionInfo) OverridingFailureMessage() string {
 
 // WithOverridingFailureMessage sets the failure message that replaces the default failure message.
 func (i *WritableAssertionInfo) WithOverridingFailureMessage(message string, args ...any) {
+	var formatted []any
+	for _, arg := range args {
+		formatted = append(formatted, i.representation(arg))
+	}
 	if len(args) > 0 {
-		i.overridingFailureMessage = fmt.Sprintf(message, args...)
+		i.overridingFailureMessage = fmt.Sprintf(message, formatted...)
 	} else {
 		i.overridingFailureMessage = message
 	}

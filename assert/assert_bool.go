@@ -6,6 +6,17 @@ type BoolAssert struct {
 	actual bool
 }
 
+// newBoolAssert creates and returns a new BoolAssert.
+func newBoolAssert(t TestingT, actual bool) *BoolAssert {
+	if h, ok := t.(tHelper); ok {
+		h.Helper()
+	}
+	boolAssert := &BoolAssert{actual: actual}
+	baseAssert := NewBaseAssert(t, NewWritableAssertionInfo(), boolAssert)
+	boolAssert.BaseAssert = baseAssert
+	return boolAssert
+}
+
 // IsTrue verifies that the actual value is true.
 //
 //	// assertions will pass
