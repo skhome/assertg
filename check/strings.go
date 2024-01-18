@@ -135,3 +135,8 @@ func StringEndsWithIgnoringCase(value string, suffix string) bool {
 func StringMatchesRegexp(value string, re *regexp.Regexp) bool {
 	return re.MatchString(value)
 }
+
+// StringIsEqual returns if both strings are equal.
+func StringIsEqual(a, b string) bool {
+	return a == b
+}

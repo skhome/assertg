@@ -8,6 +8,17 @@ type SliceAssert[E any] struct {
 	actual []E
 }
 
+// newSliceAssert creates and returns a new StringAssert.
+func newSliceAssert[T ~[]E, E any](t TestingT, actual T) *SliceAssert[E] {
+	if h, ok := t.(tHelper); ok {
+		h.Helper()
+	}
+	sliceAssert := &SliceAssert[E]{actual: actual}
+	baseAssert := NewBaseAssert(t, NewWritableAssertionInfo(), sliceAssert)
+	sliceAssert.BaseAssert = baseAssert
+	return sliceAssert
+}
+
 // IsNil verifies that the actual slice is nil.
 //
 //	// assertions will pass

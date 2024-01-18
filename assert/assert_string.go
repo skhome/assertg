@@ -14,6 +14,17 @@ type StringAssert struct {
 	actual string
 }
 
+// newStringAssert creates and returns a new StringAssert.
+func newStringAssert(t TestingT, actual string) *StringAssert {
+	if h, ok := t.(tHelper); ok {
+		h.Helper()
+	}
+	stringAssert := &StringAssert{actual: actual}
+	baseAssert := NewBaseAssert(t, NewWritableAssertionInfo(), stringAssert)
+	stringAssert.BaseAssert = baseAssert
+	return stringAssert
+}
+
 // IsEmpty verifies that the actual string is empty, i.e. has a length of 0.
 //
 //	// assertion fill pass
