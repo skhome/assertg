@@ -1,5 +1,7 @@
 package assert
 
+import "golang.org/x/exp/constraints"
+
 // ThatString starts assertions on a string.
 func ThatString(t TestingT, actual string) *StringAssert {
 	if h, ok := t.(tHelper); ok {
@@ -22,6 +24,14 @@ func ThatBool(t TestingT, actual bool) *BoolAssert {
 		h.Helper()
 	}
 	return newBoolAssert(t, actual)
+}
+
+// ThatInteger starts assertions on an integer.
+func ThatInteger[T constraints.Integer](t TestingT, actual T) *IntegerAssert[T] {
+	if h, ok := t.(tHelper); ok {
+		h.Helper()
+	}
+	return newIntegerAssert(t, actual)
 }
 
 // ThatError starts assertions on an error.
