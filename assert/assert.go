@@ -34,6 +34,14 @@ func ThatInteger[T constraints.Integer](t TestingT, actual T) *IntegerAssert[T] 
 	return newIntegerAssert(t, actual)
 }
 
+// ThatFloat starts assertions on a float.
+func ThatFloat[T constraints.Float](t TestingT, actual T) *FloatAssert[T] {
+	if h, ok := t.(tHelper); ok {
+		h.Helper()
+	}
+	return newFloatAssert(t, actual)
+}
+
 // ThatError starts assertions on an error.
 func ThatError(t TestingT, actual error) *ErrorAssert {
 	if h, ok := t.(tHelper); ok {
